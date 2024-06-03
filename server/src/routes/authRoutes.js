@@ -1,4 +1,4 @@
-// server/src/routes/authRoutes.js
+// authRoutes.js
 const express = require("express");
 const router = express.Router();
 const userController = require("../controllers/userController");
@@ -33,4 +33,4 @@ router.post("/login", (req, res, next) => {
   })(req, res, next);
 });
 
-module.exports = router;
+module.exports = router; // Change to default export

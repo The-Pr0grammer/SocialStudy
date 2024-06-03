@@ -2,8 +2,10 @@ const express = require("express");
 const cors = require("cors");
 const bodyParser = require("body-parser");
 const session = require("express-session");
-const passport = require("./config/passport");
+const passport = require("./config/passport.js");
 const path = require("path");
+const initializeWebSocketServer = require("./server.js");
+const pg = require("pg");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -24,8 +26,9 @@ app.use(passport.session());
 // Enable CORS for all routes
 app.use(cors());
 
+// index.js
 // Routes
-const authRoutes = require("./routes/authRoutes");
+const authRoutes = require("./routes/authRoutes.js");
 app.use("/auth", authRoutes); // Use the authentication routes
 
 // Serve static files from the React app
@@ -38,9 +41,7 @@ app.get("*", (req, res) => {
 });
 
 // PostgreSQL connection configuration
-const { Pool } = require("pg");
-
-const pool = new Pool({
+const pool = new pg.Pool({
   user: "adot824",
   host: "localhost",
   database: "socialstudydb",
@@ -75,3 +76,6 @@ module.exports = pool;
 app.listen(PORT, () => {
   console.log(`Server listening on port ${PORT}`);
 });
+
+// Initialize WebSocket server
+const httpServer = initializeWebSocketServer(app);

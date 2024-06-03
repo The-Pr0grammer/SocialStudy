@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { BrowserRouter as Router, Route } from "react-router-dom";
 import Login from "./components/Login";
 import RoomSelection from "./components/RoomSelection";
 
@@ -11,14 +12,18 @@ function App() {
   };
 
   return (
-    <div>
-      {!isLoggedIn ? ( // Render login component if not logged in
-        <Login onLoginSuccess={handleLoginSuccess} />
-      ) : (
-        // Render room selection component if logged in
-        <RoomSelection />
-      )}
-    </div>
+    <Router>
+      <div>
+        {isLoggedIn ? (
+          <Route path="/room-selection" component={RoomSelection} />
+        ) : (
+          <Route
+            path="/login"
+            render={() => <Login onLoginSuccess={handleLoginSuccess} />}
+          />
+        )}
+      </div>
+    </Router>
   );
 }
 

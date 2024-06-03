@@ -1,11 +1,26 @@
 import React from "react";
+import { useNavigate } from "react-router-dom"; // Import useNavigate from 'react-router-dom'
 import "../styles/RoomSelection.css"; // Import CSS file for styling
 
 function RoomSelection() {
+  const navigate = useNavigate(); // Initialize useNavigate hook
+
   // Function to handle room selection
   const handleRoomSelection = (room) => {
-    // Logic to handle room selection
-    console.log("Selected room:", room);
+    switch (room) {
+      case "Room A":
+        console.log("Selected room:", room);
+        navigate("/room-a"); // Use navigate to navigate to '/room-a'
+        break;
+      case "Room B":
+        navigate("/room-b"); // Use navigate to navigate to '/room-b'
+        break;
+      case "Room C":
+        navigate("/room-c"); // Use navigate to navigate to '/room-c'
+        break;
+      default:
+        break;
+    }
   };
 
   return (
@@ -29,7 +44,6 @@ function RoomSelection() {
       >
         HW Room
       </button>
-      {/* Apply button classname */}
     </div>
   );
 }

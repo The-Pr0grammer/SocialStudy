@@ -1,7 +1,7 @@
-// models/user.js
-"use strict";
-module.exports = (sequelize, DataTypes) => {
-  const User = sequelize.define(
+import { Sequelize, DataTypes } from "sequelize";
+
+const User = (sequelize, DataTypes) => {
+  const UserModel = sequelize.define(
     "User",
     {
       username: {
@@ -16,8 +16,10 @@ module.exports = (sequelize, DataTypes) => {
     },
     {}
   );
-  User.associate = function (models) {
+  UserModel.associate = function (models) {
     // associations can be defined here
   };
-  return User;
+  return UserModel;
 };
+
+export default User;
