@@ -1,0 +1,23 @@
+{
+  "development": {
+    "username": "adot824",
+    "password": "ajnchick",
+    "database": "socialstudydb",
+    "host": "127.0.0.1",
+    "dialect": "postgres"
+  },
+  "test": {
+    "username": "adot824",
+    "password": "ajnchick",
+    "database": "socialstudydb_test",
+    "host": "127.0.0.1",
+    "dialect": "postgres"
+  },
+  "production": {
+    "username": "adot824",
+    "password": "ajnchick",
+    "database": "socialstudydb_production",
+    "host": "127.0.0.1",
+    "dialect": "postgres"
+  }
+}

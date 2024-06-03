@@ -1,0 +1,77 @@
+const express = require("express");
+const cors = require("cors");
+const bodyParser = require("body-parser");
+const session = require("express-session");
+const passport = require("./config/passport");
+const path = require("path");
+
+const app = express();
+const PORT = process.env.PORT || 3000;
+
+// Middleware
+app.use(bodyParser.urlencoded({ extended: false }));
+app.use(bodyParser.json());
+app.use(
+  session({
+    secret: "your_secret_key",
+    resave: false,
+    saveUninitialized: false,
+  })
+);
+app.use(passport.initialize());
+app.use(passport.session());
+
+// Enable CORS for all routes
+app.use(cors());
+
+// Routes
+const authRoutes = require("./routes/authRoutes");
+app.use("/auth", authRoutes); // Use the authentication routes
+
+// Serve static files from the React app
+const clientAppPath = path.resolve(__dirname, "../../client");
+app.use(express.static(clientAppPath));
+
+// Catch all other requests and return the React app
+app.get("*", (req, res) => {
+  res.sendFile(path.join(clientAppPath, "index.html"));
+});
+
+// PostgreSQL connection configuration
+const { Pool } = require("pg");
+
+const pool = new Pool({
+  user: "adot824",
+  host: "localhost",
+  database: "socialstudydb",
+  password: "ajnchick",
+  port: 5432, // Default PostgreSQL port
+});
+
+// Test the database connection
+pool.connect((err, client, release) => {
+  if (err) {
+    return console.error("Error acquiring client", err.stack);
+  }
+  client.query("SELECT NOW()", (err, result) => {
+    release();
+    if (err) {
+      return console.error("Error executing query", err.stack);
+    }
+    console.log("Connected to PostgreSQL at:", result.rows[0].now);
+  });
+});
+
+// Error handling middleware
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).send("Something broke!");
+});
+
+// Export the pool for use in other modules
+module.exports = pool;
+
+// Start the server
+app.listen(PORT, () => {
+  console.log(`Server listening on port ${PORT}`);
+});
