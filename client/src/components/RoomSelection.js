@@ -1,22 +1,24 @@
-import React from "react";
-import { useNavigate } from "react-router-dom"; // Import useNavigate from 'react-router-dom'
-import "../styles/RoomSelection.css"; // Import CSS file for styling
+// RoomSelection.js
+import React from 'react';
+import { useNavigate } from 'react-router-dom';
+import '../styles/RoomSelection.css';
 
 function RoomSelection() {
-  const navigate = useNavigate(); // Initialize useNavigate hook
+  const navigate = useNavigate();
 
-  // Function to handle room selection
   const handleRoomSelection = (room) => {
     switch (room) {
-      case "Room A":
+      case "Game Room":
         console.log("Selected room:", room);
-        navigate("/room-a"); // Use navigate to navigate to '/room-a'
+        navigate("/room-a");
         break;
-      case "Room B":
-        navigate("/room-b"); // Use navigate to navigate to '/room-b'
+      case "Homework Room":
+        console.log("Selected room:", room);
+        navigate("/room-b");
         break;
-      case "Room C":
-        navigate("/room-c"); // Use navigate to navigate to '/room-c'
+      case "Chill Room":
+        console.log("Selected room:", room);
+        navigate("/room-c");
         break;
       default:
         break;
@@ -28,21 +30,21 @@ function RoomSelection() {
       <h2 className="room-selection-title">Room Selection</h2>
       <button
         className="room-button"
-        onClick={() => handleRoomSelection("Room A")}
+        onClick={() => handleRoomSelection("Game Room")}
       >
-        Game Room
+        The Game Room
       </button>
       <button
         className="room-button"
-        onClick={() => handleRoomSelection("Room B")}
+        onClick={() => handleRoomSelection("Homework Room")}
       >
-        Chill Room
+        The Homework Room
       </button>
       <button
         className="room-button"
-        onClick={() => handleRoomSelection("Room C")}
+        onClick={() => handleRoomSelection("Chill Room")}
       >
-        HW Room
+        The Chill Room
       </button>
     </div>
   );

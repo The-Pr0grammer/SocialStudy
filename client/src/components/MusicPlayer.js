@@ -1,8 +1,9 @@
+// MusicPlayer.js
 import React, { useState, useEffect, useRef } from "react";
 import { useWebSocket } from "./WebSocketContext";
-import { Icon } from "@mui/material";
 import PlayCircleFilledOutlinedIcon from "@mui/icons-material/PlayCircleFilledOutlined";
 import PauseCircleFilledOutlinedIcon from "@mui/icons-material/PauseCircleFilledOutlined";
+import "../styles/MusicPlayer.css"; // Import CSS file
 
 const MusicPlayer = () => {
   const client = useWebSocket();
@@ -42,13 +43,19 @@ const MusicPlayer = () => {
 
   useEffect(() => {
     if (client) {
-      client.onmessage = (message) => {
+      const handleMessage = (message) => {
         const dataFromServer = JSON.parse(message.data);
 
         if (dataFromServer.type === "musicState") {
           setMusicState(dataFromServer.musicState);
           syncMusic(dataFromServer.musicState);
         }
+      };
+
+      client.addEventListener("message", handleMessage);
+
+      return () => {
+        client.removeEventListener("message", handleMessage);
       };
     }
   }, [client]);

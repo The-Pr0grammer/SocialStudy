@@ -3,6 +3,8 @@ import React, { useState, useEffect } from "react";
 import Chat from "./Chat";
 import MusicPlayer from "./MusicPlayer";
 import { useWebSocket } from "./WebSocketContext";
+import { useAuth } from "./AuthContext"; // Import useAuth hook
+import "../styles/FillInTheBlanks.css"; // Import CSS file
 
 const FillInTheBlanks = ({ userName }) => {
   const client = useWebSocket();
@@ -12,44 +14,47 @@ const FillInTheBlanks = ({ userName }) => {
   const [roundWinner, setRoundWinner] = useState("");
   const [roundStatus, setRoundStatus] = useState("in progress");
   const [countdown, setCountdown] = useState(-1);
+  const { username } = useAuth();
 
-  const checkAnswer = (answer, userName) => {
+  const checkAnswer = (answer) => {
     if (answer.length === currentWord.length) {
       client.send(
         JSON.stringify({
           type: "check",
           message: answer.toLowerCase(),
-          user: userName,
+          user: username,
         })
       );
     }
   };
 
   useEffect(() => {
-    client.onmessage = (message) => {
-      const dataFromServer = JSON.parse(message.data);
+    if (client) {
+      client.onmessage = (message) => {
+        const dataFromServer = JSON.parse(message.data);
 
-      if (dataFromServer.type === "connectionConfirmation") {
-        client.send(
-          JSON.stringify({
-            type: "connectionAcknowledgement",
-          })
-        );
-      } else if (dataFromServer.type === "currentWord") {
-        setCurrentWord(dataFromServer.word);
-        setCurrentClue(dataFromServer.clue);
-      } else if (dataFromServer.type === "countdown") {
-        setCountdown(dataFromServer.countdown);
-      } else if (dataFromServer.type === "updateRoundStatus") {
-        setRoundStatus(dataFromServer.roundStatus);
-        setRoundWinner(dataFromServer.roundWinner);
-      }
-    };
+        if (dataFromServer.type === "connectionConfirmation") {
+          client.send(
+            JSON.stringify({
+              type: "connectionAcknowledgement",
+            })
+          );
+        } else if (dataFromServer.type === "currentWord") {
+          setCurrentWord(dataFromServer.word);
+          setCurrentClue(dataFromServer.clue);
+        } else if (dataFromServer.type === "countdown") {
+          setCountdown(dataFromServer.countdown);
+        } else if (dataFromServer.type === "updateRoundStatus") {
+          setRoundStatus(dataFromServer.roundStatus);
+          setRoundWinner(dataFromServer.roundWinner);
+        }
+      };
 
-    client.onclose = () => {
-      console.log("WebSocket Client Disconnected");
-    };
-  }, [client]); // Include currentWord in the dependency array
+      client.onclose = () => {
+        console.log("WebSocket Client Disconnected");
+      };
+    }
+  }, [client]);
 
   useEffect(() => {
     console.log("CONSOLE LOG FROM FITB roundstatus is:", roundStatus);
@@ -100,7 +105,7 @@ const FillInTheBlanks = ({ userName }) => {
       )}
 
       <div className="chatbox">
-        <Chat userName={userName} checkAnswer={checkAnswer} />
+        <Chat checkAnswer={checkAnswer} />
       </div>
     </div>
   );

@@ -1,11 +1,14 @@
 // Chat.js
 import React, { useState, useEffect } from "react";
 import { useWebSocket } from "./WebSocketContext";
+import { useAuth } from "./AuthContext"; // Import useAuth hook
+import "../styles/Chat.css"; // Import CSS file
 
-const Chat = ({ userName, checkAnswer }) => {
+const Chat = ({ checkAnswer }) => {
   const client = useWebSocket();
   const [chat, setChat] = useState("");
   const [messages, setMessages] = useState([]);
+  const { username } = useAuth();
 
   const onSend = () => {
     if (client && client.readyState === client.OPEN) {
@@ -13,11 +16,11 @@ const Chat = ({ userName, checkAnswer }) => {
         JSON.stringify({
           type: "message",
           message: chat,
-          user: userName,
+          user: username,
         })
       );
       setChat("");
-      checkAnswer(chat, userName);
+      checkAnswer(chat);
     }
   };
 
@@ -48,7 +51,9 @@ const Chat = ({ userName, checkAnswer }) => {
   return (
     <div className="main">
       <div className="chatbox">
-        <h1 style={{textAlign:"left", "paddingLeft":"50px"}}>Logged in as: "{userName}"</h1>
+        <h1 style={{ textAlign: "left", paddingLeft: "50px" }}>
+          Logged in as: "{username}"
+        </h1>
 
         <div className="messages">
           {messages.map((message, key) => (

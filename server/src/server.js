@@ -1,7 +1,6 @@
 const webSocket = require("websocket");
 const http = require("http");
-const generateRandomizedBlanks =
-  require("./WordGenerator.js").generateRandomizedBlanks;
+const generateRandomizedBlanks = require("./WordGenerator.js");
 const WordDatabase = require("./WordDatabase.js");
 
 function initializeWebSocketServer(app) {
@@ -180,8 +179,10 @@ function initializeWebSocketServer(app) {
   };
 
   wsServer.on("request", function (request) {
+    console.log("WebSocket request received");
     const id = generateId();
     const connection = request.accept(null, request.origin);
+    console.log("WebSocket connection accepted");
     connections[id] = connection;
 
     const confirmationTimeout = setInterval(() => {

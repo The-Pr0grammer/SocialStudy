@@ -12,7 +12,16 @@ export const WebSocketProvider = ({ children }) => {
     setClient(socketClient);
 
     socketClient.onopen = () => {
-      console.log("WebSocket Client Connected");
+      console.log("WebSocket Client Connected from WebSocketContext.js");
+    };
+
+    socketClient.onerror = (error) => {
+      console.error("WebSocket Error: ", error);
+    };
+
+    socketClient.onclose = () => {
+      console.log("WebSocket Client Closed");
+      setClient(null); // Reset client state
     };
 
     return () => {

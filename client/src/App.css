@@ -1,3 +1,5 @@
+@import url("https://fonts.googleapis.com/css2?family=Poetsen+One&display=swap");
+
 .App {
   text-align: center;
 }
@@ -26,6 +28,26 @@
 
 .App-link {
   color: #61dafb;
+}
+
+.main {
+  font-family: "Poetsen One", sans-serif;
+  font-weight: 400;
+  font-style: normal;
+  background-position: fixed;
+
+  /* position: relative; */
+  width: 100%;
+  height: 100vh; /* Full viewport height */
+  background-image: url("../public/assets/images/galaxy.jpg"); /* Path to your background image */
+  background-size: cover; /* Ensure the image covers the entire container */
+  background-position: center; /* Center the image */
+  background-repeat: no-repeat; /* Prevent the image from repeating */
+  background-attachment: fixed; /* Keep the background fixed during scroll */
+  display: flex;
+  align-items: center;
+  flex-direction: row;
+  justify-content: flex-start;
 }
 
 @keyframes App-logo-spin {

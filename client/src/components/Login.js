@@ -1,13 +1,17 @@
 import React, { useState } from "react";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "./AuthContext"; // Import useAuth hook
 import "../styles/Login.css"; // Import CSS file
 
-function Login({ onLoginSuccess }) {
+function Login() {
   const [loginUsername, setLoginUsername] = useState("");
   const [loginPassword, setLoginPassword] = useState("");
   const [registerUsername, setRegisterUsername] = useState("");
   const [registerPassword, setRegisterPassword] = useState("");
   const [loginResponse, setLoginResponse] = useState(null); // State to store login response
+  const navigate = useNavigate(); // Initialize navigate function from useNavigate hook
+  const { login } = useAuth(); // Destructure login from useAuth
 
   const handleLogin = (e) => {
     e.preventDefault(); // Prevent default form submission
@@ -17,9 +21,9 @@ function Login({ onLoginSuccess }) {
         password: loginPassword,
       })
       .then((response) => {
-        console.log("Logged in:", response.data);
         setLoginResponse(response.data); // Set the response in state
-        onLoginSuccess(); // Call the onLoginSuccess function
+        login(loginUsername); // Call the login function from AuthContext
+        navigate("/room-selection"); // Navigate to room-selection upon successful login
       })
       .catch((error) => {
         console.error("Login error:", error);
@@ -45,13 +49,13 @@ function Login({ onLoginSuccess }) {
   };
 
   return (
-    <div className="login-container"> 
+    <div className="login-container">
       <div>
         <h2>Login</h2>
         <form onSubmit={handleLogin}>
           <label>Username:</label>
           <input
-            className="login-input" 
+            className="login-input"
             type="text"
             value={loginUsername}
             onChange={(e) => setLoginUsername(e.target.value)}
@@ -59,13 +63,15 @@ function Login({ onLoginSuccess }) {
           <br />
           <label>Password:</label>
           <input
-            className="login-input" 
+            className="login-input"
             type="password"
             value={loginPassword}
             onChange={(e) => setLoginPassword(e.target.value)}
           />
           <br />
-          <button className="login-button" type="submit">Login</button> 
+          <button className="login-button" type="submit">
+            Login
+          </button>
         </form>
       </div>
       <div>
@@ -73,7 +79,7 @@ function Login({ onLoginSuccess }) {
         <form onSubmit={handleRegister}>
           <label>Username:</label>
           <input
-            className="register-input" 
+            className="register-input"
             type="text"
             value={registerUsername}
             onChange={(e) => setRegisterUsername(e.target.value)}
@@ -81,13 +87,15 @@ function Login({ onLoginSuccess }) {
           <br />
           <label>Password:</label>
           <input
-            className="register-input" 
+            className="register-input"
             type="password"
             value={registerPassword}
             onChange={(e) => setRegisterPassword(e.target.value)}
           />
           <br />
-          <button className="register-button" type="submit">Register</button> 
+          <button className="register-button" type="submit">
+            Register
+          </button>
         </form>
         {loginResponse && ( // Display response if available
           <div>

@@ -1,0 +1,46 @@
+.chatbox {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    background-color: rgba(10, 10, 10, 0.95);
+    text-align: center;
+    color: white;
+  }
+  
+  .messages {
+    height: 70.5%;
+    overflow-y: scroll;
+  }
+  
+  .inputdiv {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    padding: 20px;
+  }
+  
+  .chat-input {
+    height: auto;
+    width: 70%;
+    padding: 10px;
+    box-sizing: border-box;
+    border: 2px solid #ccc;
+    border-radius: 5px;
+    resize: none; /* Prevent manual resizing by the user */
+    overflow: hidden; /* Hide the overflow */
+    font-size: 16px;
+    line-height: 1.5;
+    /* margin-bottom: 10px;  */
+  }
+  
+  .send-button {
+    height: auto;
+    border-radius: 360px;
+    width: 20%;
+    border: none;
+    font-size: 16px;
+    background: none;
+    color: white;
+  }

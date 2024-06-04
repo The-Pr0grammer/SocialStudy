@@ -1,0 +1,14 @@
+.music-container {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 25%;
+  background-color: rgba(10, 10, 10, 0);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000; /* Ensure the player is above other content */
+  text-align: right;
+  color: white;
+  font-size: 0.5em;
+}
