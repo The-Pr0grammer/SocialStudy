@@ -14,6 +14,12 @@ export const AuthProvider = ({ children }) => {
       setIsLoggedIn(true);
       setUsername(localStorage.getItem("username"));
     }
+
+    // Cleanup
+    return () => {
+      localStorage.removeItem("isLoggedIn");
+      localStorage.removeItem("username");
+    };
   }, []);
 
   const login = (username) => {
@@ -25,6 +31,7 @@ export const AuthProvider = ({ children }) => {
 
   const logout = () => {
     setIsLoggedIn(false);
+    setUsername("");
     localStorage.removeItem("isLoggedIn");
     localStorage.removeItem("username");
   };

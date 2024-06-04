@@ -8,22 +8,30 @@ function initializeWebSocketServer(app) {
   const server = http.createServer(app);
   const connections = {};
   const generateId = () => "id" + Math.random().toString(16).slice(2);
+  let confirmationTimeout = null;
+
   let currentWordIndex = Math.floor(Math.random() * WordDatabase.length);
   let currentWord = "";
   let countdown = -1;
   let roundTimer = 0;
-  let roundInterval;
-  let newRoundInterval;
+  let roundInterval = null;
+  let newRoundInterval = null;
+  let currentPlayers = 0;
+  let roundWinner = "";
+  const roundStatus = ["in progress", "correct", "no winner", "stopped"];
 
   server.listen(websSocketServerPort);
-  console.log("Server is listening on port", websSocketServerPort);
-
   const wsServer = new webSocket.server({
     httpServer: server,
   });
 
-  let roundStatus = "in progress";
-  let roundWinner = "";
+  //check if the websocket server is running
+  if (wsServer) {
+    console.log(
+      "Server.js: Websocket server is initialized 🚀 -> Running on port",
+      websSocketServerPort
+    );
+  }
 
   let musicState = {
     isPlaying: true,
@@ -66,9 +74,8 @@ function initializeWebSocketServer(app) {
 
       roundInterval = setInterval(() => {
         if (roundTimer >= WordDatabase[currentWordIndex].word.length * 5) {
-          roundStatus = "no winner";
           revealWord();
-          updateRoundStatus(roundStatus);
+          updateRoundStatus(roundStatus[2]);
           startNewRound();
         } else if (roundTimer % 5 === 0 && roundTimer !== 0) {
           broadcastCurrentWord(currentWord);
@@ -98,9 +105,8 @@ function initializeWebSocketServer(app) {
     if (
       answer.toLowerCase() === WordDatabase[currentWordIndex].word.toLowerCase()
     ) {
-      roundStatus = "correct";
       roundWinner = userName;
-      updateRoundStatus(roundStatus, roundWinner);
+      updateRoundStatus(roundStatus[1], roundWinner);
       revealWord();
       startNewRound();
     }
@@ -137,7 +143,6 @@ function initializeWebSocketServer(app) {
         countdown = -1;
         clearInterval(newRoundInterval);
         currentWordIndex = Math.floor(Math.random() * WordDatabase.length);
-        roundStatus = "in progress";
         roundWinner = "";
 
         for (let key in connections) {
@@ -149,7 +154,7 @@ function initializeWebSocketServer(app) {
           );
         }
 
-        updateRoundStatus(roundStatus, roundWinner);
+        updateRoundStatus(roundStatus[0], roundWinner);
         broadcastCurrentWord();
         intervalLock = false;
       } else {
@@ -178,38 +183,125 @@ function initializeWebSocketServer(app) {
     }
   };
 
+  const updatePlayerCount = (direction, client) => {
+    if (currentPlayers === 0) {
+      startNewRound();
+    } else {
+      client.sendUTF(
+        JSON.stringify({
+          type: "currentWord",
+          word: currentWord,
+          clue: WordDatabase[currentWordIndex].clue,
+        })
+      );
+    }
+
+    currentPlayers += direction;
+
+    if (currentPlayers === 0) {
+      stopGame();
+    }
+
+    console.log("Current players: ", currentPlayers);
+
+    if (currentPlayers > 0) {
+      for (let key in connections) {
+        connections[key].sendUTF(
+          JSON.stringify({
+            type: "playerCount",
+            playerCount: currentPlayers,
+          })
+        );
+      }
+    }
+  };
+
+  const stopGame = () => {
+    roundInterval && clearInterval(roundInterval);
+    newRoundInterval && clearInterval(newRoundInterval);
+    currentWord = "";
+    countdown = -1;
+    roundTimer = 0;
+    roundWinner = "";
+  };
+
   wsServer.on("request", function (request) {
-    console.log("WebSocket request received");
     const id = generateId();
     const connection = request.accept(null, request.origin);
-    console.log("WebSocket connection accepted");
     connections[id] = connection;
 
-    const confirmationTimeout = setInterval(() => {
+    let ackReqCount = 0;
+    confirmationTimeout = setInterval(() => {
       connection.sendUTF(JSON.stringify({ type: "connectionConfirmation" }));
+      ackReqCount += 1;
+      console.log(
+        "Server.js: Sending connection confirmation to client with id ",
+        id,
+        " Attempt:",
+        ackReqCount
+      );
+
+      if (ackReqCount >= 10) {
+        clearInterval(confirmationTimeout);
+        console.log(
+          "Server.js: Connection confirmation timed out for client with id ",
+          id
+        );
+      }
     }, 1000);
 
     connection.on("message", function (message) {
-      console.log("message: " + message.utf8Data);
-
       const data = JSON.parse(message.utf8Data);
 
       if (data.type === "connectionAcknowledgement") {
         clearTimeout(confirmationTimeout);
-        broadcastCurrentWord();
-      } else if (data.type === "check") {
+
+        console.log(
+          "server.js: Client ",
+          id,
+          " acknowledged. You are cleared for takeoff! 🛫"
+        );
+      } else if (data.type === "checkAnswer") {
+        // Check a submitted answer
         checkAnswer(data.message, data.user);
       } else if (data.type === "message") {
+        // Broadcast the text message to all clients
         for (let key in connections) {
           connections[key].sendUTF(message.utf8Data);
         }
+      } else if (data.type === "connectPlayer") {
+        console.log(
+          "server.js: Client " +
+            id +
+            " has connected to the gameroom. Welcome! 🎉"
+        );
+
+        updatePlayerCount(1, connection); // Update the player count
+      } else if (data.type === "leaveGameRoom") {
+        console.log(
+          "server.js: Client " + id + " has left the gameroom. Goodbye! 👋"
+        );
+        updatePlayerCount(-1); // Update the player count
       }
     });
 
     connection.on("close", function (reasonCode, description) {
+      confirmationTimeout && clearInterval(confirmationTimeout);
+      roundInterval && clearInterval(roundInterval);
+      newRoundInterval && clearInterval(newRoundInterval);
+
       console.log(
-        new Date() + " Peer " + connection.remoteAddress + " disconnected."
+        "server.js: " +
+          new Date() +
+          " Peer " +
+          connection.remoteAddress +
+          " disconnected." +
+          " Reason code: " +
+          reasonCode +
+          " Description: " +
+          description
       );
+
       delete connections[id];
     });
   });

@@ -52,20 +52,21 @@ const pool = new pg.Pool({
 // Test the database connection
 pool.connect((err, client, release) => {
   if (err) {
-    return console.error("Error acquiring client", err.stack);
+    return console.error("Express: Error acquiring client", err.stack);
   }
+
   client.query("SELECT NOW()", (err, result) => {
     release();
     if (err) {
-      return console.error("Error executing query", err.stack);
+      return console.error("Express: Error executing query", err.stack);
     }
-    console.log("Connected to PostgreSQL at:", result.rows[0].now);
+    console.log("Express: Connected to PostgreSQL at:", result.rows[0].now);
   });
 });
 
 // Error handling middleware
 app.use((err, req, res, next) => {
-  console.error(err.stack);
+  console.error("Express: " + err.stack);
   res.status(500).send("Something broke!");
 });
 
@@ -74,7 +75,7 @@ module.exports = pool;
 
 // Start the server
 app.listen(PORT, () => {
-  console.log(`Server listening on port ${PORT}`);
+  console.log(`Express: Node server engaging ⏩ -> Listening on port ${PORT}`);
 });
 
 // Initialize WebSocket server

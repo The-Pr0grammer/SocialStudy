@@ -27,14 +27,14 @@ const Chat = ({ checkAnswer }) => {
   useEffect(() => {
     if (client) {
       const handleMessage = (message) => {
-        const dataFromServer = JSON.parse(message.data);
+        const data = JSON.parse(message.data);
 
-        if (dataFromServer.type === "message") {
+        if (data.type === "message") {
           setMessages((prevMessages) => [
             ...prevMessages,
             {
-              message: dataFromServer.message,
-              user: dataFromServer.user,
+              message: data.message,
+              user: data.user,
             },
           ]);
         }

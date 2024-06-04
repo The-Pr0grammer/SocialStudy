@@ -1,35 +1,76 @@
-// WebSocketContext.js
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { w3cwebsocket as W3CWebSocket } from "websocket";
+import { useAuth } from "./AuthContext";
 
 const WebSocketContext = createContext(null);
 
 export const WebSocketProvider = ({ children }) => {
   const [client, setClient] = useState(null);
+  const { isLoggedIn, username } = useAuth();
 
   useEffect(() => {
-    const socketClient = new W3CWebSocket("ws://127.0.0.1:8000");
-    setClient(socketClient);
+    let socketClient = null;
+    let intervalId = null;
 
-    socketClient.onopen = () => {
-      console.log("WebSocket Client Connected from WebSocketContext.js");
+    const connectToServer = () => {
+      console.log("WebSocketContext.js: Attempting to connect to server...");
+      socketClient = new W3CWebSocket(
+        "ws://127.0.0.1:8000?username=" + username
+      );
+
+      socketClient.onopen = () => {
+        console.log("WebSocketContext.js: Connected to server");
+        setClient(socketClient);
+        if (intervalId) {
+          clearInterval(intervalId);
+          intervalId = null;
+        }
+      };
+
+      socketClient.onmessage = (message) => {
+        const data = JSON.parse(message.data);
+
+        if (data.type === "connectionConfirmation") {
+          console.log(
+            "WebSocket Client -> username:" +
+              username +
+              " Acknowledging connection. Requesting confirmation for clearance."
+          );
+
+          socketClient.send(
+            JSON.stringify({
+              type: "connectionAcknowledgement",
+            })
+          );
+        }
+      };
+
+      socketClient.onerror = (error) => {
+        console.error("WebSocketContext.js: Connection error:", error);
+      };
+
+      socketClient.onclose = () => {
+        console.log("WebSocketContext.js: Connection closed");
+        setClient(null);
+        if (!intervalId) {
+          intervalId = setInterval(connectToServer, 10000);
+        }
+      };
     };
 
-    socketClient.onerror = (error) => {
-      console.error("WebSocket Error: ", error);
-    };
-
-    socketClient.onclose = () => {
-      console.log("WebSocket Client Closed");
-      setClient(null); // Reset client state
-    };
+    if (isLoggedIn && username) {
+      connectToServer();
+    }
 
     return () => {
       if (socketClient) {
         socketClient.close();
       }
+      if (intervalId) {
+        clearInterval(intervalId);
+      }
     };
-  }, []);
+  }, [username]);
 
   return (
     <WebSocketContext.Provider value={client}>
@@ -38,6 +79,4 @@ export const WebSocketProvider = ({ children }) => {
   );
 };
 
-export const useWebSocket = () => {
-  return useContext(WebSocketContext);
-};
+export const useWebSocket = () => useContext(WebSocketContext);

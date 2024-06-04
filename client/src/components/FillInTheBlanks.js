@@ -6,9 +6,10 @@ import { useWebSocket } from "./WebSocketContext";
 import { useAuth } from "./AuthContext"; // Import useAuth hook
 import "../styles/FillInTheBlanks.css"; // Import CSS file
 
-const FillInTheBlanks = ({ userName }) => {
+const FillInTheBlanks = () => {
   const client = useWebSocket();
 
+  const [currentPlayers, setCurrentPlayers] = useState(0);
   const [currentWord, setCurrentWord] = useState("");
   const [currentClue, setCurrentClue] = useState("");
   const [roundWinner, setRoundWinner] = useState("");
@@ -16,12 +17,15 @@ const FillInTheBlanks = ({ userName }) => {
   const [countdown, setCountdown] = useState(-1);
   const { username } = useAuth();
 
-  const checkAnswer = (answer) => {
-    if (answer.length === currentWord.length) {
+  const connectPlayer = () => {
+    if (client) {
+      console.log(
+        "Websocket client username: ",
+        username + " has connected to the game room"
+      );
       client.send(
         JSON.stringify({
-          type: "check",
-          message: answer.toLowerCase(),
+          type: "connectPlayer",
           user: username,
         })
       );
@@ -30,41 +34,45 @@ const FillInTheBlanks = ({ userName }) => {
 
   useEffect(() => {
     if (client) {
+      connectPlayer();
+
       client.onmessage = (message) => {
-        const dataFromServer = JSON.parse(message.data);
+        const data = JSON.parse(message.data);
 
-        if (dataFromServer.type === "connectionConfirmation") {
-          client.send(
-            JSON.stringify({
-              type: "connectionAcknowledgement",
-            })
-          );
-        } else if (dataFromServer.type === "currentWord") {
-          setCurrentWord(dataFromServer.word);
-          setCurrentClue(dataFromServer.clue);
-        } else if (dataFromServer.type === "countdown") {
-          setCountdown(dataFromServer.countdown);
-        } else if (dataFromServer.type === "updateRoundStatus") {
-          setRoundStatus(dataFromServer.roundStatus);
-          setRoundWinner(dataFromServer.roundWinner);
+        if (data.type === "currentWord") {
+          setCurrentWord(data.word);
+          setCurrentClue(data.clue);
+        } else if (data.type === "countdown") {
+          setCountdown(data.countdown);
+        } else if (data.type === "updateRoundStatus") {
+          setRoundStatus(data.roundStatus);
+          setRoundWinner(data.roundWinner);
+        } else if (data.type === "playerCount") {
+          console.log("Player count update from server: ", data.playerCount);
+
+          setCurrentPlayers(data.playerCount);
         }
-      };
-
-      client.onclose = () => {
-        console.log("WebSocket Client Disconnected");
       };
     }
   }, [client]);
 
-  useEffect(() => {
-    console.log("CONSOLE LOG FROM FITB roundstatus is:", roundStatus);
-  }, [roundStatus]);
+  const checkAnswer = (answer) => {
+    if (answer.length === currentWord.length) {
+      client.send(
+        JSON.stringify({
+          type: "checkAnswer",
+          message: answer.toLowerCase(),
+          user: username,
+        })
+      );
+    }
+  };
 
   return (
     <div className="main">
-      <div className="music-box">
+      {/* <div className="music-box">
         <MusicPlayer />
-      </div>
+      </div> */}
       <div className="game">
         <div style={{ height: "45%" }}>
           <h1>Fill in the Blanks</h1>
@@ -82,8 +90,9 @@ const FillInTheBlanks = ({ userName }) => {
                   : char}
               </span>
             ))}
-          <p>Clue: "{currentClue}"</p>
+          {currentClue && <p>Clue: "{currentClue}"</p>}
         </div>
+        <p>Players: {currentPlayers}</p>
       </div>
 
       {countdown > 0 && (
