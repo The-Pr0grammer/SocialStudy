@@ -1,4 +1,4 @@
-// App.js
+//App.js
 import React from "react";
 import {
   BrowserRouter as Router,
@@ -6,13 +6,19 @@ import {
   Route,
   Navigate,
 } from "react-router-dom";
-import { AuthProvider, useAuth } from "./components/AuthContext";
-import { WebSocketProvider } from "./components/WebSocketContext";
-import Login from "./components/Login";
-import RoomSelection from "./components/RoomSelection";
-import FillInTheBlanks from "./components/FillInTheBlanks";
-import HWRoom from "./components/HWRoom";
-import ChillRoom from "./components/ChillRoom";
+import {
+  AuthProvider,
+  WebSocketProvider,
+  RoomProvider,
+  useAuth,
+} from "./contexts";
+import {
+  Login,
+  RoomSelection,
+  FillInTheBlanks,
+  HWRoom,
+  ChillRoom,
+} from "./components";
 import "./App.css";
 
 function AppRoutes() {
@@ -43,9 +49,11 @@ function App() {
   return (
     <Router>
       <AuthProvider>
-        <WebSocketProvider>
-          <AppRoutes />
-        </WebSocketProvider>
+        <RoomProvider>
+          <WebSocketProvider>
+            <AppRoutes />
+          </WebSocketProvider>
+        </RoomProvider>
       </AuthProvider>
     </Router>
   );

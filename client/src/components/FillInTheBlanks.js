@@ -1,40 +1,45 @@
 // FillInTheBlanks.js
 import React, { useState, useEffect } from "react";
+import { useWebSocket } from "../contexts/WebSocketContext";
+import { useAuth } from "../contexts/AuthContext";
+import { useRoom } from "../contexts/RoomContext";
 import Chat from "./Chat";
-import MusicPlayer from "./MusicPlayer";
-import { useWebSocket } from "./WebSocketContext";
-import { useAuth } from "./AuthContext"; // Import useAuth hook
-import "../styles/FillInTheBlanks.css"; // Import CSS file
+import "../styles/FillInTheBlanks.css";
 
 const FillInTheBlanks = () => {
-  const client = useWebSocket();
-
+  const { setCurrentRoom } = useRoom(); // Destructure setCurrentRoom from RoomContext
   const [currentPlayers, setCurrentPlayers] = useState(0);
   const [currentWord, setCurrentWord] = useState("");
   const [currentClue, setCurrentClue] = useState("");
   const [roundWinner, setRoundWinner] = useState("");
   const [roundStatus, setRoundStatus] = useState("in progress");
   const [countdown, setCountdown] = useState(-1);
+  const { client } = useWebSocket();
   const { username } = useAuth();
 
-  const connectPlayer = () => {
-    if (client) {
-      console.log(
-        "Websocket client username: ",
-        username + " has connected to the game room"
-      );
+  useEffect(() => {
+    const handleUnload = () => {
+      setCurrentRoom(null); // Set the current room to null when unloading
+    };
+
+    setCurrentRoom("gameRoom"); // Set the current room when component loads
+
+    window.addEventListener("beforeunload", handleUnload);
+
+    return () => {
+      window.removeEventListener("beforeunload", handleUnload);
+    };
+  }, [setCurrentRoom]); // Include setCurrentRoom in the dependency array to avoid eslint warnings
+
+  useEffect(() => {
+    if (client && username) {
       client.send(
         JSON.stringify({
-          type: "connectPlayer",
+          type: "joinRoom",
+          room: "gameRoom",
           user: username,
         })
       );
-    }
-  };
-
-  useEffect(() => {
-    if (client) {
-      connectPlayer();
 
       client.onmessage = (message) => {
         const data = JSON.parse(message.data);
@@ -48,16 +53,24 @@ const FillInTheBlanks = () => {
           setRoundStatus(data.roundStatus);
           setRoundWinner(data.roundWinner);
         } else if (data.type === "playerCount") {
-          console.log("Player count update from server: ", data.playerCount);
-
           setCurrentPlayers(data.playerCount);
         }
       };
+
+      return () => {
+        client.send(
+          JSON.stringify({
+            type: "leaveRoom",
+            room: "gameRoom",
+            user: username,
+          })
+        );
+      };
     }
-  }, [client]);
+  }, [client, username]);
 
   const checkAnswer = (answer) => {
-    if (answer.length === currentWord.length) {
+    if (client && answer.length === currentWord.length) {
       client.send(
         JSON.stringify({
           type: "checkAnswer",
@@ -70,9 +83,6 @@ const FillInTheBlanks = () => {
 
   return (
     <div className="main">
-      {/* <div className="music-box">
-        <MusicPlayer />
-      </div> */}
       <div className="game">
         <div style={{ height: "45%" }}>
           <h1>Fill in the Blanks</h1>
@@ -80,7 +90,6 @@ const FillInTheBlanks = () => {
         </div>
         <div className="word">
           {currentWord &&
-            currentWord !== "" &&
             currentWord.split("").map((char, index) => (
               <span key={index} className="letter">
                 {char === " "

@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "./AuthContext"; // Import useAuth hook
+import { useAuth } from "../contexts/AuthContext"; // Import useAuth hook
 import "../styles/Login.css"; // Import CSS file
 
 function Login() {

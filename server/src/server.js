@@ -16,16 +16,20 @@ function initializeWebSocketServer(app) {
   let roundTimer = 0;
   let roundInterval = null;
   let newRoundInterval = null;
-  let currentPlayers = 0;
-  let roundWinner = "";
   const roundStatus = ["in progress", "correct", "no winner", "stopped"];
+
+  const rooms = {
+    gameRoom: new Set(),
+    hwRoom: new Set(),
+    chillRoom: new Set(),
+  };
 
   server.listen(websSocketServerPort);
   const wsServer = new webSocket.server({
     httpServer: server,
   });
 
-  //check if the websocket server is running
+  // Check if the websocket server is running
   if (wsServer) {
     console.log(
       "Server.js: Websocket server is initialized 🚀 -> Running on port",
@@ -38,8 +42,6 @@ function initializeWebSocketServer(app) {
     currentTime: 0,
     timestamp: Date.now(),
   };
-
-  let intervalLock = false;
 
   const broadcastMusicState = () => {
     for (let key in connections) {
@@ -125,10 +127,6 @@ function initializeWebSocketServer(app) {
   };
 
   const startNewRound = () => {
-    if (intervalLock) return;
-    intervalLock = true;
-
-    console.log("Starting new round...");
     currentWordIndex = Math.floor(Math.random() * WordDatabase.length);
     roundInterval && clearInterval(roundInterval);
     newRoundInterval && clearInterval(newRoundInterval);
@@ -136,10 +134,8 @@ function initializeWebSocketServer(app) {
     countdown = 6;
 
     newRoundInterval = setInterval(() => {
-      console.log("Countdown is", countdown);
       countdown -= 1;
       if (countdown === 0) {
-        console.log("Countdown is 0");
         countdown = -1;
         clearInterval(newRoundInterval);
         currentWordIndex = Math.floor(Math.random() * WordDatabase.length);
@@ -156,7 +152,6 @@ function initializeWebSocketServer(app) {
 
         updateRoundStatus(roundStatus[0], roundWinner);
         broadcastCurrentWord();
-        intervalLock = false;
       } else {
         for (let key in connections) {
           connections[key].sendUTF(
@@ -183,46 +178,23 @@ function initializeWebSocketServer(app) {
     }
   };
 
-  const updatePlayerCount = (direction, client) => {
-    if (currentPlayers === 0) {
-      startNewRound();
+  const updatePlayerCount = (room, direction, client) => {
+    const roomSet = rooms[room];
+    if (direction === 1) {
+      roomSet.add(client);
     } else {
-      client.sendUTF(
+      roomSet.delete(client);
+    }
+
+    for (let key in connections) {
+      connections[key].sendUTF(
         JSON.stringify({
-          type: "currentWord",
-          word: currentWord,
-          clue: WordDatabase[currentWordIndex].clue,
+          type: "playerCount",
+          playerCount: roomSet.size,
+          room,
         })
       );
     }
-
-    currentPlayers += direction;
-
-    if (currentPlayers === 0) {
-      stopGame();
-    }
-
-    console.log("Current players: ", currentPlayers);
-
-    if (currentPlayers > 0) {
-      for (let key in connections) {
-        connections[key].sendUTF(
-          JSON.stringify({
-            type: "playerCount",
-            playerCount: currentPlayers,
-          })
-        );
-      }
-    }
-  };
-
-  const stopGame = () => {
-    roundInterval && clearInterval(roundInterval);
-    newRoundInterval && clearInterval(newRoundInterval);
-    currentWord = "";
-    countdown = -1;
-    roundTimer = 0;
-    roundWinner = "";
   };
 
   wsServer.on("request", function (request) {
@@ -262,26 +234,25 @@ function initializeWebSocketServer(app) {
           " acknowledged. You are cleared for takeoff! 🛫"
         );
       } else if (data.type === "checkAnswer") {
-        // Check a submitted answer
         checkAnswer(data.message, data.user);
       } else if (data.type === "message") {
-        // Broadcast the text message to all clients
         for (let key in connections) {
           connections[key].sendUTF(message.utf8Data);
         }
-      } else if (data.type === "connectPlayer") {
+      } else if (data.type === "joinRoom") {
         console.log(
           "server.js: Client " +
             id +
-            " has connected to the gameroom. Welcome! 🎉"
+            " has joined " +
+            data.room +
+            ". Welcome! 🎉"
         );
-
-        updatePlayerCount(1, connection); // Update the player count
-      } else if (data.type === "leaveGameRoom") {
+        updatePlayerCount(data.room, 1, connection);
+      } else if (data.type === "leaveRoom") {
         console.log(
-          "server.js: Client " + id + " has left the gameroom. Goodbye! 👋"
+          "server.js: Client " + id + " has left " + data.room + ". Goodbye! 👋"
         );
-        updatePlayerCount(-1); // Update the player count
+        updatePlayerCount(data.room, -1, connection);
       }
     });
 
@@ -302,11 +273,16 @@ function initializeWebSocketServer(app) {
           description
       );
 
+      for (let room in rooms) {
+        if (rooms[room].has(connection)) {
+          updatePlayerCount(room, -1, connection);
+        }
+      }
+
       delete connections[id];
     });
   });
 
-  // Return the Express server instance
   return server;
 }
 

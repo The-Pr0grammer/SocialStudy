@@ -1,7 +1,7 @@
 // Chat.js
 import React, { useState, useEffect } from "react";
-import { useWebSocket } from "./WebSocketContext";
-import { useAuth } from "./AuthContext"; // Import useAuth hook
+import { useWebSocket } from "../contexts/WebSocketContext/WebSocketContext";
+import { useAuth } from "../contexts/AuthContext/AuthContext"; // Import useAuth hook
 import "../styles/Chat.css"; // Import CSS file
 
 const Chat = ({ checkAnswer }) => {

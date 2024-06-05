@@ -1,12 +1,20 @@
+// WebSocketContext.js
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { w3cwebsocket as W3CWebSocket } from "websocket";
-import { useAuth } from "./AuthContext";
+import { useAuth } from "../AuthContext";
+import { useRoom } from "../RoomContext";
 
 const WebSocketContext = createContext(null);
 
 export const WebSocketProvider = ({ children }) => {
-  const [client, setClient] = useState(null);
   const { isLoggedIn, username } = useAuth();
+  const [client, setClient] = useState(null);
+  const { currentRoom } = useRoom();
+
+  useEffect(() => {
+    
+    console.log("WebSocket context is aware of the current room:", currentRoom);
+  }, [currentRoom]);
 
   useEffect(() => {
     let socketClient = null;
@@ -14,9 +22,7 @@ export const WebSocketProvider = ({ children }) => {
 
     const connectToServer = () => {
       console.log("WebSocketContext.js: Attempting to connect to server...");
-      socketClient = new W3CWebSocket(
-        "ws://127.0.0.1:8000?username=" + username
-      );
+      socketClient = new W3CWebSocket("ws://127.0.0.1:8000");
 
       socketClient.onopen = () => {
         console.log("WebSocketContext.js: Connected to server");
@@ -25,24 +31,8 @@ export const WebSocketProvider = ({ children }) => {
           clearInterval(intervalId);
           intervalId = null;
         }
-      };
-
-      socketClient.onmessage = (message) => {
-        const data = JSON.parse(message.data);
-
-        if (data.type === "connectionConfirmation") {
-          console.log(
-            "WebSocket Client -> username:" +
-              username +
-              " Acknowledging connection. Requesting confirmation for clearance."
-          );
-
-          socketClient.send(
-            JSON.stringify({
-              type: "connectionAcknowledgement",
-            })
-          );
-        }
+        // Store the WebSocket connection status in localStorage
+        localStorage.setItem("websocketConnected", "true");
       };
 
       socketClient.onerror = (error) => {
@@ -52,6 +42,7 @@ export const WebSocketProvider = ({ children }) => {
       socketClient.onclose = () => {
         console.log("WebSocketContext.js: Connection closed");
         setClient(null);
+        localStorage.removeItem("websocketConnected");
         if (!intervalId) {
           intervalId = setInterval(connectToServer, 10000);
         }
@@ -64,13 +55,27 @@ export const WebSocketProvider = ({ children }) => {
 
     return () => {
       if (socketClient) {
+        console.log(
+          "WebSocketContext.js: Client",
+          username,
+          "has left the game room. Goodbye!"
+        );
+
+        socketClient.send(
+          JSON.stringify({
+            type: "leaveRoom",
+            user: username,
+            room: "gameRoom", //this has to correspond to the room the user is in when they disconnect from the websocket
+          })
+        );
         socketClient.close();
       }
       if (intervalId) {
         clearInterval(intervalId);
       }
+      localStorage.removeItem("websocketConnected");
     };
-  }, [username]);
+  }, [isLoggedIn, username]);
 
   return (
     <WebSocketContext.Provider value={client}>
