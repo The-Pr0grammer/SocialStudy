@@ -1,4 +1,3 @@
-// FillInTheBlanks.js
 import React, { useState, useEffect } from "react";
 import { useWebSocket } from "../contexts/WebSocketContext";
 import { useAuth } from "../contexts/AuthContext";
@@ -7,32 +6,53 @@ import Chat from "./Chat";
 import "../styles/FillInTheBlanks.css";
 
 const FillInTheBlanks = () => {
-  const { setCurrentRoom } = useRoom(); // Destructure setCurrentRoom from RoomContext
+  const { client } = useWebSocket();
+  const { username } = useAuth();
+  const { currentRoom, setCurrentRoom } = useRoom();
+
   const [currentPlayers, setCurrentPlayers] = useState(0);
   const [currentWord, setCurrentWord] = useState("");
   const [currentClue, setCurrentClue] = useState("");
   const [roundWinner, setRoundWinner] = useState("");
   const [roundStatus, setRoundStatus] = useState("in progress");
   const [countdown, setCountdown] = useState(-1);
-  const { client } = useWebSocket();
-  const { username } = useAuth();
+  const [loading, setLoading] = useState(true);
+
+  const handleBeforeUnload = () => {
+    if (client && client.readyState === WebSocket.OPEN) {
+      client.send(
+        JSON.stringify({
+          type: "leaveRoom",
+          user: username,
+          room: "gameRoom",
+        })
+      );
+    }
+    setCurrentRoom(null);
+  };
 
   useEffect(() => {
-    const handleUnload = () => {
-      setCurrentRoom(null); // Set the current room to null when unloading
-    };
-
-    setCurrentRoom("gameRoom"); // Set the current room when component loads
-
-    window.addEventListener("beforeunload", handleUnload);
+    window.addEventListener("beforeunload", handleBeforeUnload);
 
     return () => {
-      window.removeEventListener("beforeunload", handleUnload);
+      if (client && client.readyState === WebSocket.OPEN) {
+        client.send(
+          JSON.stringify({
+            type: "leaveRoom",
+            user: username,
+            room: "gameRoom",
+          })
+        );
+      }
+      setCurrentRoom(null);
+      window.removeEventListener("beforeunload", handleBeforeUnload);
     };
-  }, [setCurrentRoom]); // Include setCurrentRoom in the dependency array to avoid eslint warnings
+  }, [client]);
 
   useEffect(() => {
-    if (client && username) {
+    setCurrentRoom("gameRoom");
+
+    if (client && client.readyState === WebSocket.OPEN && username) {
       client.send(
         JSON.stringify({
           type: "joinRoom",
@@ -44,33 +64,36 @@ const FillInTheBlanks = () => {
       client.onmessage = (message) => {
         const data = JSON.parse(message.data);
 
-        if (data.type === "currentWord") {
-          setCurrentWord(data.word);
-          setCurrentClue(data.clue);
-        } else if (data.type === "countdown") {
-          setCountdown(data.countdown);
-        } else if (data.type === "updateRoundStatus") {
-          setRoundStatus(data.roundStatus);
-          setRoundWinner(data.roundWinner);
-        } else if (data.type === "playerCount") {
-          setCurrentPlayers(data.playerCount);
+        switch (data.type) {
+          case "currentWord":
+            setCurrentWord(data.word);
+            setCurrentClue(data.clue);
+            break;
+          case "countdown":
+            setCountdown(data.countdown);
+            break;
+          case "updateRoundStatus":
+            setRoundStatus(data.roundStatus);
+            setRoundWinner(data.roundWinner);
+            break;
+          case "playerCount":
+            setCurrentPlayers(data.playerCount);
+            break;
+          default:
+            break;
         }
       };
 
-      return () => {
-        client.send(
-          JSON.stringify({
-            type: "leaveRoom",
-            room: "gameRoom",
-            user: username,
-          })
-        );
+      client.onclose = () => {
+        console.log("FillInTheBlanks.js: WebSocket connection closed");
       };
+
+      setLoading(false); // Set loading to false once the client is connected
     }
-  }, [client, username]);
+  }, []);
 
   const checkAnswer = (answer) => {
-    if (client && answer.length === currentWord.length) {
+    if (client && client.readyState === WebSocket.OPEN && answer.length === currentWord.length) {
       client.send(
         JSON.stringify({
           type: "checkAnswer",
@@ -80,6 +103,10 @@ const FillInTheBlanks = () => {
       );
     }
   };
+
+  if (loading) {
+    return <div>Loading...</div>;
+  }
 
   return (
     <div className="main">
@@ -130,3 +157,4 @@ const FillInTheBlanks = () => {
 };
 
 export default FillInTheBlanks;
+

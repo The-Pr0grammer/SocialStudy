@@ -8,7 +8,6 @@ function initializeWebSocketServer(app) {
   const server = http.createServer(app);
   const connections = {};
   const generateId = () => "id" + Math.random().toString(16).slice(2);
-  let confirmationTimeout = null;
 
   let currentWordIndex = Math.floor(Math.random() * WordDatabase.length);
   let currentWord = "";
@@ -180,6 +179,7 @@ function initializeWebSocketServer(app) {
 
   const updatePlayerCount = (room, direction, client) => {
     const roomSet = rooms[room];
+    roomSet.size === 0 && startNewRound();
     if (direction === 1) {
       roomSet.add(client);
     } else {
@@ -195,6 +195,8 @@ function initializeWebSocketServer(app) {
         })
       );
     }
+    
+    console.log("Server.js: Player count in " + room + " is " + roomSet.size);
   };
 
   wsServer.on("request", function (request) {
@@ -202,6 +204,7 @@ function initializeWebSocketServer(app) {
     const connection = request.accept(null, request.origin);
     connections[id] = connection;
 
+    let confirmationTimeout = null;
     let ackReqCount = 0;
     confirmationTimeout = setInterval(() => {
       connection.sendUTF(JSON.stringify({ type: "connectionConfirmation" }));
@@ -231,7 +234,7 @@ function initializeWebSocketServer(app) {
         console.log(
           "server.js: Client ",
           id,
-          " acknowledged. You are cleared for takeoff! 🛫"
+          " acknowledgement confirmed. You are cleared for takeoff! 🛫"
         );
       } else if (data.type === "checkAnswer") {
         checkAnswer(data.message, data.user);

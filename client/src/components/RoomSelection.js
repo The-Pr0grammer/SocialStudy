@@ -1,7 +1,7 @@
 // RoomSelection.js
-import React from 'react';
-import { useNavigate } from 'react-router-dom';
-import '../styles/RoomSelection.css';
+import React from "react";
+import { useNavigate } from "react-router-dom";
+import "../styles/RoomSelection.css";
 
 function RoomSelection() {
   const navigate = useNavigate();
@@ -9,15 +9,12 @@ function RoomSelection() {
   const handleRoomSelection = (room) => {
     switch (room) {
       case "Game Room":
-        console.log("Selected room:", room);
         navigate("/room-a");
         break;
       case "Homework Room":
-        console.log("Selected room:", room);
         navigate("/room-b");
         break;
       case "Chill Room":
-        console.log("Selected room:", room);
         navigate("/room-c");
         break;
       default:
