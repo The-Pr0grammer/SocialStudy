@@ -61,6 +61,12 @@ const FillInTheBlanks = () => {
         })
       );
 
+      client.send(
+        JSON.stringify({
+          type: "requestCurrentWord",
+        })
+      );
+
       client.onmessage = (message) => {
         const data = JSON.parse(message.data);
 

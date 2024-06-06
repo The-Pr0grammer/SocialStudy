@@ -126,7 +126,11 @@ function initializeWebSocketServer(app) {
   };
 
   const startNewRound = () => {
-    currentWordIndex = Math.floor(Math.random() * WordDatabase.length);
+    let newIndex = Math.floor(Math.random() * WordDatabase.length);
+    currentWordIndex =
+      newIndex === currentWordIndex
+        ? Math.floor(Math.random() * WordDatabase.length)
+        : newIndex;
     roundInterval && clearInterval(roundInterval);
     newRoundInterval && clearInterval(newRoundInterval);
     currentWord = "";
@@ -179,7 +183,7 @@ function initializeWebSocketServer(app) {
 
   const updatePlayerCount = (room, direction, client) => {
     const roomSet = rooms[room];
-    roomSet.size === 0 && startNewRound();
+    room == "gameRoom" && roomSet.size === 0 && startNewRound();
     if (direction === 1) {
       roomSet.add(client);
     } else {
@@ -236,6 +240,14 @@ function initializeWebSocketServer(app) {
           id,
           " acknowledgement confirmed. You are cleared for takeoff! 🛫"
         );
+      } else if (data.type === "getWord") {
+        connection.sendUTF(
+          JSON.stringify({
+            type: "requestCurrentWord",
+            word: WordDatabase[currentWordIndex].word,
+            clue: WordDatabase[currentWordIndex].clue,
+          })
+        );
       } else if (data.type === "checkAnswer") {
         checkAnswer(data.message, data.user);
       } else if (data.type === "message") {
@@ -261,8 +273,8 @@ function initializeWebSocketServer(app) {
 
     connection.on("close", function (reasonCode, description) {
       confirmationTimeout && clearInterval(confirmationTimeout);
-      roundInterval && clearInterval(roundInterval);
-      newRoundInterval && clearInterval(newRoundInterval);
+      // roundInterval && clearInterval(roundInterval);
+      // newRoundInterval && clearInterval(newRoundInterval);
 
       console.log(
         "server.js: " +
