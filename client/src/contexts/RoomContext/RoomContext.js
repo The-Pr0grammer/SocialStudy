@@ -6,9 +6,9 @@ const RoomContext = createContext();
 export const RoomProvider = ({ children }) => {
   const [currentRoom, setCurrentRoom] = useState(null);
 
-  useEffect(() => {
-    currentRoom && console.log("RoomContext.js: Current room:", currentRoom);
-  }, [currentRoom]);
+  // useEffect(() => {
+  //   currentRoom && console.log("RoomContext.js: Current room:", currentRoom);
+  // }, [currentRoom]);
 
   return (
     <RoomContext.Provider value={{ currentRoom, setCurrentRoom }}>

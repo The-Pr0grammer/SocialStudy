@@ -49,61 +49,79 @@ function Login() {
   };
 
   return (
-    <div className="login-container">
-      <div>
-        <h2>Login</h2>
-        <form onSubmit={handleLogin}>
-          <label>Username:</label>
-          <input
-            className="login-input"
-            type="text"
-            value={loginUsername}
-            onChange={(e) => setLoginUsername(e.target.value)}
-          />
-          <br />
-          <label>Password:</label>
-          <input
-            className="login-input"
-            type="password"
-            value={loginPassword}
-            onChange={(e) => setLoginPassword(e.target.value)}
-          />
-          <br />
-          <button className="login-button" type="submit">
-            Login
-          </button>
-        </form>
-      </div>
-      <div>
-        <h2>Register</h2>
-        <form onSubmit={handleRegister}>
-          <label>Username:</label>
-          <input
-            className="register-input"
-            type="text"
-            value={registerUsername}
-            onChange={(e) => setRegisterUsername(e.target.value)}
-          />
-          <br />
-          <label>Password:</label>
-          <input
-            className="register-input"
-            type="password"
-            value={registerPassword}
-            onChange={(e) => setRegisterPassword(e.target.value)}
-          />
-          <br />
-          <button className="register-button" type="submit">
-            Register
-          </button>
-        </form>
-        {loginResponse && ( // Display response if available
-          <div>
-            <h3>Login Response:</h3>
-            <p>{JSON.stringify(loginResponse)}</p>
+    <div className="login-main">
+      <div className="login-container">
+        <div>
+          <h2>Login</h2>
+          <form className="login-form" onSubmit={handleLogin}>
+            <div className="f-container">
+              <div className="label-div">
+                <label>Username:</label>
+              </div>
+              <input
+                className="input"
+                type="text"
+                value={loginUsername}
+                onChange={(e) => setLoginUsername(e.target.value)}
+              />
+              <br />
+            </div>
+            <div className="f-container">
+              <div className="label-div">
+                <label>Password:</label>
+              </div>
+              <input
+                className="input"
+                type="password"
+                value={loginPassword}
+                onChange={(e) => setLoginPassword(e.target.value)}
+              />
+              <br />
+            </div>
+            <button className="login-button" type="submit">
+              Login
+            </button>
+          </form>
+        </div>
+        <div>
+          <h2>Register</h2>
+          <form className="register-form" onSubmit={handleRegister}>
+            <div className="f-container">
+              <div className="label-div">
+                <label>Username:</label>
+              </div>
+              <input
+                className="input"
+                type="text"
+                value={registerUsername}
+                onChange={(e) => setRegisterUsername(e.target.value)}
+              />
+              <br />
+            </div>
+            <div className="f-container">
+              <div className="label-div">
+                <label>Password:</label>
+              </div>
+              <input
+                className="input"
+                type="password"
+                value={registerPassword}
+                onChange={(e) => setRegisterPassword(e.target.value)}
+              />
+              <br />
+            </div>
+            <button className="register-button" type="submit">
+              Register
+            </button>
+          </form>
           </div>
-        )}
-      </div>
+          </div>
+          {loginResponse && ( // Display response if available
+            <div className="login-response">
+              <h3>Login Response:</h3>
+              <p>{JSON.stringify(loginResponse)}</p>
+            </div>
+          )}
     </div>
   );
 }

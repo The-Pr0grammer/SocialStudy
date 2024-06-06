@@ -23,26 +23,28 @@ function RoomSelection() {
   };
 
   return (
-    <div className="room-selection-container">
-      <h2 className="room-selection-title">Room Selection</h2>
-      <button
-        className="room-button"
-        onClick={() => handleRoomSelection("Game Room")}
-      >
-        The Game Room
-      </button>
-      <button
-        className="room-button"
-        onClick={() => handleRoomSelection("Homework Room")}
-      >
-        The Homework Room
-      </button>
-      <button
-        className="room-button"
-        onClick={() => handleRoomSelection("Chill Room")}
-      >
-        The Chill Room
-      </button>
+    <div className="room-main">
+      <div className="room-selection-container">
+        <h2 className="room-selection-title">Room Selection</h2>
+        <button
+          className="room-button"
+          onClick={() => handleRoomSelection("Game Room")}
+        >
+          The Game Room
+        </button>
+        <button
+          className="room-button"
+          onClick={() => handleRoomSelection("Homework Room")}
+        >
+          The Homework Room
+        </button>
+        <button
+          className="room-button"
+          onClick={() => handleRoomSelection("Chill Room")}
+        >
+          The Chill Room
+        </button>
+      </div>
     </div>
   );
 }

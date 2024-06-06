@@ -1,31 +1,67 @@
+.login-main {
+  /* color: white; */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  background: #141117;
+}
+
 .login-container {
-  color: white;
   display: flex;
   justify-content: center; /* Centers horizontally */
-  align-items: center; /* Centers vertically (optional) */
-  height: 100vh; /* Full viewport height (optional) */
+  align-items: center;
   border: 1px solid #ccc;
   flex-direction: column;
-  background-color: rgba(10, 10, 10, 0.75);
-  width: 100%;
+  height: 40vh;
+  width: 50%;
+  border-radius: 10%;
+  padding: 50px;
+  background-color: rgba(61, 90, 255, 0.75);
 }
 
 .login-form {
   margin-bottom: 20px;
-  border: 2px solid #ccc;
-  padding: 20px;
   border-radius: 5px;
 }
 
 .register-form {
-  border: 2px solid #ccc;
-  padding: 20px;
+  /* display: flex; */
+  flex-direction: column;
+  margin-bottom: 20px;
   border-radius: 5px;
 }
 
+.f-container {
+  display: flex;
+  flex-direction: row;
+  /* justify-content: space-between; */
+  /* width: 50%; */
+}
+
+.label-div {
+  display: flex;
+  flex-direction: row;
+  width: 40%;
+  /* background: #ccc; */
+}
+
+.input {
+  margin-bottom: 20px;
+  padding: 5px;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+  width: 60%;
+}
+
 .login-response {
-  margin-top: 20px;
-  border: 2px solid #ccc;
+  position: absolute;
+  bottom:0;
+  color: red;
+  /* border: 2px solid #ccc; */
+  width: 50%;
+  font-size: 0.1em;
   padding: 20px;
   border-radius: 5px;
+  /* background: #ccc; */
 }

@@ -47,7 +47,7 @@ const FillInTheBlanks = () => {
       setCurrentRoom(null);
       window.removeEventListener("beforeunload", handleBeforeUnload);
     };
-  }, [client]);
+  }, []);
 
   useEffect(() => {
     setCurrentRoom("gameRoom");
@@ -65,6 +65,16 @@ const FillInTheBlanks = () => {
         const data = JSON.parse(message.data);
 
         switch (data.type) {
+          case "connectionConfirmation":
+            console.log(
+              "WebSocketContext.js: Connection confirmation received, sending acknowledgement... from gameroom"
+            );
+            client.send(
+              JSON.stringify({
+                type: "connectionAcknowledgement",
+              })
+            );
+            break;
           case "currentWord":
             setCurrentWord(data.word);
             setCurrentClue(data.clue);
@@ -85,15 +95,19 @@ const FillInTheBlanks = () => {
       };
 
       client.onclose = () => {
-        console.log("FillInTheBlanks.js: WebSocket connection closed");
+        // console.log("FillInTheBlanks.js: WebSocket connection closed");
       };
 
       setLoading(false); // Set loading to false once the client is connected
     }
-  }, []);
+  }, [client]);
 
   const checkAnswer = (answer) => {
-    if (client && client.readyState === WebSocket.OPEN && answer.length === currentWord.length) {
+    if (
+      client &&
+      client.readyState === WebSocket.OPEN &&
+      answer.length === currentWord.length
+    ) {
       client.send(
         JSON.stringify({
           type: "checkAnswer",
@@ -157,4 +171,3 @@ const FillInTheBlanks = () => {
 };
 
 export default FillInTheBlanks;
-

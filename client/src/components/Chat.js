@@ -2,11 +2,13 @@
 import React, { useState, useEffect } from "react";
 import { useWebSocket } from "../contexts/WebSocketContext";
 import { useAuth } from "../contexts/AuthContext";
+import { useRoom } from "../contexts/RoomContext";
 import "../styles/Chat.css"; // Import CSS file
 
 const Chat = ({ checkAnswer }) => {
-  const {client} = useWebSocket();
+  const { client } = useWebSocket();
   const { username } = useAuth();
+  const { currentRoom, setCurrentRoom } = useRoom();
   const [chat, setChat] = useState("");
   const [messages, setMessages] = useState([]);
 
@@ -20,7 +22,7 @@ const Chat = ({ checkAnswer }) => {
         })
       );
       setChat("");
-      checkAnswer(chat);
+      currentRoom == "gameRoom" && checkAnswer(chat);
     }
   };
 

@@ -42,23 +42,23 @@ function initializeWebSocketServer(app) {
     timestamp: Date.now(),
   };
 
-  const broadcastMusicState = () => {
-    for (let key in connections) {
-      connections[key].sendUTF(
-        JSON.stringify({ type: "musicState", musicState })
-      );
-    }
-  };
+  // const broadcastMusicState = () => {
+  //   for (let key in connections) {
+  //     connections[key].sendUTF(
+  //       JSON.stringify({ type: "musicState", musicState })
+  //     );
+  //   }
+  // };
 
-  setInterval(() => {
-    if (musicState.isPlaying) {
-      const now = Date.now();
-      const elapsed = (now - musicState.timestamp) / 1000;
-      musicState.currentTime += elapsed;
-      musicState.timestamp = now;
-      broadcastMusicState();
-    }
-  }, 5000);
+  // setInterval(() => {
+  //   if (musicState.isPlaying) {
+  //     const now = Date.now();
+  //     const elapsed = (now - musicState.timestamp) / 1000;
+  //     musicState.currentTime += elapsed;
+  //     musicState.timestamp = now;
+  //     broadcastMusicState();
+  //   }
+  // }, 5000);
 
   const broadcastCurrentWord = () => {
     if (currentWord === "") {
@@ -195,7 +195,7 @@ function initializeWebSocketServer(app) {
         })
       );
     }
-    
+
     console.log("Server.js: Player count in " + room + " is " + roomSet.size);
   };
 
@@ -268,7 +268,7 @@ function initializeWebSocketServer(app) {
         "server.js: " +
           new Date() +
           " Peer " +
-          connection.remoteAddress +
+          id +
           " disconnected." +
           " Reason code: " +
           reasonCode +
