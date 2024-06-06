@@ -16,10 +16,12 @@ import {
   Login,
   RoomSelection,
   FillInTheBlanks,
+  DragAndDrop,
   HWRoom,
   ChillRoom,
 } from "./components";
 import "./App.css";
+import DragAndDropMathGame from "./components/DragAndDrop";
 
 function AppRoutes() {
   const { isLoggedIn } = useAuth();
@@ -37,7 +39,8 @@ function AppRoutes() {
         }
       />
       <Route path="/room-selection" element={<RoomSelection />} />
-      <Route path="/room-a" element={<FillInTheBlanks />} />
+      {/* <Route path="/room-a" element={<FillInTheBlanks />} /> */}
+      <Route path="/room-a" element={<DragAndDrop />} />
       <Route path="/room-b" element={<HWRoom />} />
       <Route path="/room-c" element={<ChillRoom />} />
       <Route path="/login" element={<Login />} />

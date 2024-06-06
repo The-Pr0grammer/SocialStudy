@@ -133,7 +133,7 @@ const FillInTheBlanks = () => {
       <div className="game">
         <div style={{ height: "45%" }}>
           <h1>Fill in the Blanks</h1>
-          <p>Complete the word(s) by filling in the blanks</p>
+          <p>Complete the word(s) by filling in the blanks. First person with the correct answer wins</p>
         </div>
         <div className="word">
           {currentWord &&
