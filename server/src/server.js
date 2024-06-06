@@ -240,11 +240,11 @@ function initializeWebSocketServer(app) {
           id,
           " acknowledgement confirmed. You are cleared for takeoff! 🛫"
         );
-      } else if (data.type === "getWord") {
+      } else if (data.type === "requestWord") {
         connection.sendUTF(
           JSON.stringify({
-            type: "requestCurrentWord",
-            word: WordDatabase[currentWordIndex].word,
+            type: "currentWord",
+            word: currentWord,
             clue: WordDatabase[currentWordIndex].clue,
           })
         );

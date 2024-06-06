@@ -63,7 +63,7 @@ const FillInTheBlanks = () => {
 
       client.send(
         JSON.stringify({
-          type: "requestCurrentWord",
+          type: "requestWord",
         })
       );
 
