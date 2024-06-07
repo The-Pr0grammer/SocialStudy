@@ -18,6 +18,8 @@ const FillInTheBlanks = ({ onGameSwitch }) => {
   const [countdown, setCountdown] = useState(-1);
   const [loading, setLoading] = useState(true);
 
+  //comment to commit preredux changes
+
   const handleBeforeUnload = () => {
     if (client && client.readyState === WebSocket.OPEN) {
       client.send(
