@@ -15,8 +15,7 @@ import {
 import {
   Login,
   RoomSelection,
-  FillInTheBlanks,
-  DragAndDrop,
+  GameRoom,
   HWRoom,
   ChillRoom,
 } from "./components";
@@ -39,8 +38,7 @@ function AppRoutes() {
         }
       />
       <Route path="/room-selection" element={<RoomSelection />} />
-      {/* <Route path="/room-a" element={<FillInTheBlanks />} /> */}
-      <Route path="/room-a" element={<DragAndDrop />} />
+      <Route path="/room-a" element={<GameRoom />} />
       <Route path="/room-b" element={<HWRoom />} />
       <Route path="/room-c" element={<ChillRoom />} />
       <Route path="/login" element={<Login />} />

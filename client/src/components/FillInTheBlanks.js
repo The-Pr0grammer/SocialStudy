@@ -5,7 +5,7 @@ import { useRoom } from "../contexts/RoomContext";
 import Chat from "./Chat";
 import "../styles/FillInTheBlanks.css";
 
-const FillInTheBlanks = () => {
+const FillInTheBlanks = ({ onGameSwitch }) => {
   const { client } = useWebSocket();
   const { username } = useAuth();
   const { currentRoom, setCurrentRoom } = useRoom();
@@ -133,7 +133,10 @@ const FillInTheBlanks = () => {
       <div className="game">
         <div style={{ height: "45%" }}>
           <h1>Fill in the Blanks</h1>
-          <p>Complete the word(s) by filling in the blanks. First person with the correct answer wins</p>
+          <p>
+            Complete the word(s) by filling in the blanks. First person with the
+            correct answer wins
+          </p>
         </div>
         <div className="word">
           {currentWord &&
@@ -168,10 +171,6 @@ const FillInTheBlanks = () => {
           <h1>No one got the answer correct!</h1>
         </div>
       )}
-
-      <div className="chatbox">
-        <Chat checkAnswer={checkAnswer} />
-      </div>
     </div>
   );
 };

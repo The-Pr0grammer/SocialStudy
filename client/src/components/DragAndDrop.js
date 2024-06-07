@@ -53,7 +53,7 @@ const DropBox = ({ id, accept, onDrop, children }) => {
   );
 };
 
-const DragAndDrop = () => {
+const DragAndDrop = ({ onGameSwitch }) => {
   const [equation, setEquation] = useState(["", "", "", "=", ""]);
   const [result, setResult] = useState(null);
 
