@@ -1,22 +1,44 @@
-import { createSlice } from '@reduxjs/toolkit';
+import { createSlice } from "@reduxjs/toolkit";
 
 const gameSlice = createSlice({
-    name: 'gameRoom',
-    initialState: {
-        currentWord: '',
-        lastAnswerCorrect: null,
+  name: "gameRoom",
+  initialState: {
+    currentWord: "",
+    lastAnswerCorrect: null,
+  },
+  reducers: {
+    setCurrentWord(state, action) {
+      state.currentWord = action.payload;
     },
-    reducers: {
-        setCurrentWord(state, action) {
-            state.currentWord = action.payload;
-        },
-        checkAnswer(state, action) {
-            const isCorrect = action.payload.answer.toLowerCase() === state.currentWord.toLowerCase();
-            state.lastAnswerCorrect = isCorrect;
-        },
-        // Add other reducers here as needed
-    }
+    updateAnswerCorrectness(state, action) {
+      state.lastAnswerCorrect = action.payload.isCorrect;
+    },
+  },
 });
 
-export const { setCurrentWord, checkAnswer } = gameSlice.actions;
+export const { setCurrentWord, updateAnswerCorrectness } = gameSlice.actions;
+
+// Thunk action for checking answers
+export const checkAnswer =
+  (answer, client, username) => (dispatch, getState) => {
+    const currentWord = getState().gameRoom.currentWord;
+    const isCorrect = answer.toLowerCase() === currentWord.toLowerCase();
+
+    dispatch(updateAnswerCorrectness({ isCorrect }));
+
+    if (
+      client &&
+      client.readyState === WebSocket.OPEN &&
+      answer.toLowerCase().length === currentWord.length
+    ) {
+      client.send(
+        JSON.stringify({
+          type: "checkAnswer",
+          message: answer.toLowerCase(),
+          user: username,
+        })
+      );
+    }
+  };
+
 export default gameSlice.reducer;

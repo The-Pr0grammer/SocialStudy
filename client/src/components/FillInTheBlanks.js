@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from "react";
+import { useSelector, useDispatch } from "react-redux";
+import { setCurrentWord } from "../redux/gameRoom/gameSlice";
 import { useWebSocket } from "../contexts/WebSocketContext";
 import { useAuth } from "../contexts/AuthContext";
 import { useRoom } from "../contexts/RoomContext";
-import { useSelector, useDispatch } from "react-redux";
-import { setCurrentWord, checkAnswer } from "../redux/gameRoom/gameSlice";
 import "../styles/FillInTheBlanks.css";
 
 const FillInTheBlanks = ({ onGameSwitch }) => {
@@ -12,20 +12,14 @@ const FillInTheBlanks = ({ onGameSwitch }) => {
   const { currentRoom, setCurrentRoom } = useRoom();
 
   const [currentPlayers, setCurrentPlayers] = useState(0);
-  // const [currentWord, setCurrentWord] = useState("");
   const [currentClue, setCurrentClue] = useState("");
   const [roundWinner, setRoundWinner] = useState("");
   const [roundStatus, setRoundStatus] = useState("in progress");
   const [countdown, setCountdown] = useState(-1);
   const [loading, setLoading] = useState(true);
 
-  const dispatch = useDispatch();
   const currentWord = useSelector((state) => state.gameRoom.currentWord);
-
-  const handleNewWord = (word) => {
-    dispatch(setCurrentWord(word));
-  };
-
+  const dispatch = useDispatch();
 
   const handleBeforeUnload = () => {
     if (client && client.readyState === WebSocket.OPEN) {
@@ -91,7 +85,7 @@ const FillInTheBlanks = ({ onGameSwitch }) => {
             );
             break;
           case "currentWord":
-            setCurrentWord(data.word);
+            dispatch(setCurrentWord(data.word));
             setCurrentClue(data.clue);
             break;
           case "countdown":
@@ -117,28 +111,12 @@ const FillInTheBlanks = ({ onGameSwitch }) => {
     }
   }, [client]);
 
-  const checkAnswer = (answer) => {
-    if (
-      client &&
-      client.readyState === WebSocket.OPEN &&
-      answer.length === currentWord.length
-    ) {
-      client.send(
-        JSON.stringify({
-          type: "checkAnswer",
-          message: answer.toLowerCase(),
-          user: username,
-        })
-      );
-    }
-  };
-
   if (loading) {
     return <div>Loading...</div>;
   }
 
   return (
-    <div className="main">
+    <div>
       <div className="game">
         <div style={{ height: "45%" }}>
           <h1>Fill in the Blanks</h1>

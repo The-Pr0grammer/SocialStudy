@@ -1,4 +1,7 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useWebSocket } from "../contexts/WebSocketContext";
+import { useAuth } from "../contexts/AuthContext";
+import { useRoom } from "../contexts/RoomContext";
 import { DndProvider, useDrag, useDrop } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
 import update from "immutability-helper";
@@ -44,16 +47,105 @@ const DropBox = ({ id, accept, onDrop, children }) => {
   return (
     <div ref={ref} className="drop-box">
       {children}
-      {children && id !== 3 && ( // Render the "X" button only if there's an item and it's not the "=" box
-        <button className="remove-item" onClick={handleRemoveItem}>
-          X
-        </button>
-      )}
+      {children &&
+        id !== 3 && ( // Render the "X" button only if there's an item and it's not the "=" box
+          <button className="remove-item" onClick={handleRemoveItem}>
+            X
+          </button>
+        )}
     </div>
   );
 };
 
 const DragAndDrop = ({ onGameSwitch }) => {
+  const { client } = useWebSocket();
+  const { username } = useAuth();
+  const { currentRoom, setCurrentRoom } = useRoom();
+  const [roundWinner, setRoundWinner] = useState("");
+  const [roundStatus, setRoundStatus] = useState("in progress");
+  const [currentPlayers, setCurrentPlayers] = useState(0);
+
+  const handleBeforeUnload = () => {
+    if (client && client.readyState === WebSocket.OPEN) {
+      client.send(
+        JSON.stringify({
+          type: "leaveRoom",
+          user: username,
+          room: "gameRoom",
+        })
+      );
+    }
+    setCurrentRoom(null);
+  };
+
+  useEffect(() => {
+    window.addEventListener("beforeunload", handleBeforeUnload);
+
+    return () => {
+      if (client && client.readyState === WebSocket.OPEN) {
+        client.send(
+          JSON.stringify({
+            type: "leaveRoom",
+            user: username,
+            room: "gameRoom",
+          })
+        );
+      }
+      setCurrentRoom(null);
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+    };
+  }, []);
+
+  useEffect(() => {
+    setCurrentRoom("gameRoom");
+
+    if (client && client.readyState === WebSocket.OPEN && username) {
+      client.send(
+        JSON.stringify({
+          type: "joinRoom",
+          room: "gameRoom",
+          user: username,
+        })
+      );
+
+      client.send(
+        JSON.stringify({
+          type: "requestWord",
+        })
+      );
+
+      client.onmessage = (message) => {
+        const data = JSON.parse(message.data);
+
+        switch (data.type) {
+          case "connectionConfirmation":
+            console.log(
+              "WebSocketContext.js: Connection confirmation received, sending acknowledgement... from gameroom"
+            );
+            client.send(
+              JSON.stringify({
+                type: "connectionAcknowledgement",
+              })
+            );
+            break;
+          case "updateRoundStatus":
+            setRoundStatus(data.roundStatus);
+            setRoundWinner(data.roundWinner);
+            break;
+          case "playerCount":
+            setCurrentPlayers(data.playerCount);
+            break;
+          default:
+            break;
+        }
+      };
+
+      client.onclose = () => {
+        // console.log("FillInTheBlanks.js: WebSocket connection closed");
+      };
+    }
+  }, [client]);
+
   const [equation, setEquation] = useState(["", "", "", "=", ""]);
   const [result, setResult] = useState(null);
 
@@ -87,6 +179,9 @@ const DragAndDrop = ({ onGameSwitch }) => {
       const evalRhs = eval(rhs);
       if (evalLhs === evalRhs) {
         setResult("Correct");
+        setTimeout(() => {
+          setResult(null);
+        }, 3000);
         setEquation(["", "", "", "=", ""]); // Reset equation to initial state
       } else {
         setResult("Incorrect");
@@ -99,6 +194,13 @@ const DragAndDrop = ({ onGameSwitch }) => {
   return (
     <DndProvider backend={HTML5Backend}>
       <div className="math-game">
+        <div style={{ height: "45%", color: "white" }}>
+          <h1>Math Mayhem</h1>
+          <p>
+            Drag and drop the numbers and symbols to complete a valid equation.
+          </p>
+        </div>
+        {result !== null && <div className="result">Result: {result}</div>}
         <div className="numbers">
           {numbers.map((number) => (
             <DragItem key={number} id={number} type={ItemTypes.ITEM}>
@@ -128,7 +230,8 @@ const DragAndDrop = ({ onGameSwitch }) => {
         <button className="check-button" onClick={checkEquation}>
           Check Equation
         </button>
-        {result !== null && <div className="result">Result: {result}</div>}
+
+        <p style={{ color: "white" }}>Players: {currentPlayers}</p>
       </div>
     </DndProvider>
   );

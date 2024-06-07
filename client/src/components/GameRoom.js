@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import FillInTheBlanks from "./FillInTheBlanks";
 import DragAndDrop from "./DragAndDrop";
 import Chat from "./Chat";
+import "../styles/GameRoom.css";
 
 const GameRoom = () => {
   const [currentGame, setCurrentGame] = useState("fillInTheBlanks");
@@ -13,14 +14,18 @@ const GameRoom = () => {
   };
 
   return (
-    <div>
-      {currentGame === "fillInTheBlanks" ? (
+    <div className="main">
+      <div className="change-game">
+        <button onClick={() => handleGameSwitch()}>Change Game</button>
+      </div>
+      {/* {currentGame === "fillInTheBlanks" ? ( */}
+      {currentGame !== "fillInTheBlanks" ? (
         <FillInTheBlanks onGameSwitch={handleGameSwitch} />
       ) : (
         <DragAndDrop onGameSwitch={handleGameSwitch} />
       )}
       <div className="chatbox">
-        <Chat checkAnswer={checkAnswer} />
+        <Chat />
       </div>
     </div>
   );

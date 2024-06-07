@@ -1,16 +1,20 @@
 // Chat.js
 import React, { useState, useEffect } from "react";
+import { useDispatch } from "react-redux";
+import { checkAnswer } from "../redux/gameRoom/gameSlice";
 import { useWebSocket } from "../contexts/WebSocketContext";
 import { useAuth } from "../contexts/AuthContext";
 import { useRoom } from "../contexts/RoomContext";
 import "../styles/Chat.css"; // Import CSS file
 
-const Chat = ({ checkAnswer }) => {
+const Chat = () => {
   const { client } = useWebSocket();
   const { username } = useAuth();
   const { currentRoom, setCurrentRoom } = useRoom();
   const [chat, setChat] = useState("");
   const [messages, setMessages] = useState([]);
+
+  const dispatch = useDispatch();
 
   const onSend = () => {
     if (client && client.readyState === client.OPEN) {
@@ -22,7 +26,8 @@ const Chat = ({ checkAnswer }) => {
         })
       );
       setChat("");
-      currentRoom == "gameRoom" && checkAnswer(chat);
+      currentRoom == "gameRoom" &&
+        dispatch(checkAnswer(chat, client, username));
     }
   };
 

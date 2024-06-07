@@ -7,8 +7,10 @@ import gameReducer from './gameRoom/gameSlice';
 const rootReducer = combineReducers({
     // auth: authReducer,
     // profile: profileReducer,
-    game: gameReducer
+    gameRoom: gameReducer
     // Add other reducers here
 });
 
 export default rootReducer;
+
+

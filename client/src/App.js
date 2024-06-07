@@ -1,6 +1,6 @@
 import React from "react";
-import { Provider } from 'react-redux';
-import store from './redux/store';
+import { Provider } from "react-redux";
+import store from "./redux/store";
 import {
   BrowserRouter as Router,
   Routes,
@@ -23,7 +23,7 @@ import {
 import "./App.css";
 
 function AppRoutes() {
-  const { isLoggedIn } = useAuth();  // Ensure useAuth is actually exported and used correctly
+  const { isLoggedIn } = useAuth(); // Ensure useAuth is actually exported and used correctly
 
   return (
     <Routes>
@@ -48,12 +48,11 @@ function AppRoutes() {
 
 function App() {
   return (
-    <Provider store={store}> {/* Redux Provider wrapping everything */}
+    <Provider store={store}>
       <Router>
         <AuthProvider>
           <RoomProvider>
             <WebSocketProvider>
-              {/* All components inside here can now access Redux store */}
               <AppRoutes />
             </WebSocketProvider>
           </RoomProvider>

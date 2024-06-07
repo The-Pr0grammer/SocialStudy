@@ -91,12 +91,11 @@ const ChillRoom = () => {
       <div className="video">
         <h1>Chill Room</h1>
         <p>Relax and chat with other viewers</p>
-      <div className="video-section">
-        <VideoPlayer videoUrl={videoUrl} />
-      </div>
+        <div className="video-section">
+          <VideoPlayer videoUrl={videoUrl} />
+        </div>
         <p>Viewers: {currentViewers}</p>
       </div>
-
 
       <div className="chatbox">
         <Chat />

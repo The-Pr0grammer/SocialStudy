@@ -1,71 +1,73 @@
 .math-game {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    margin: 20px;
-  }
-  
-  .numbers, .symbols {
-    display: flex;
-    margin: 10px;
-  }
-  
-  .drag-item {
-    width: 40px;
-    height: 40px;
-    margin: 5px;
-    padding: 10px;
-    background-color: #eee;
-    border: 1px solid #ccc;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: grab;
-    font-size: 1.2em;
-  }
-  
-  .equation {
-    display: flex;
-    margin: 20px;
-  }
-  
-  .check-button {
-    margin: 20px;
-  }
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  /* margin: 20px; */
+  background-color: rgba(10, 10, 10, 0.85);
+}
 
-  .result {
-    margin-top: 20px;
-    font-size: 1.5em;
-  }
-  
-  .drop-box {
-    position: relative; /* Set position to relative */
-    width: 40px;
-    height: 40px;
-    margin: 5px;
-    padding: 10px;
-    background-color: #fff;
-    border: 2px dashed #ccc;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.2em;
-  }
-  
-  .remove-item {
-    position: absolute; /* Set position to absolute */
-    top: 5px; /* Adjust top position */
-    right: 5px; /* Adjust right position */
-    background-color: rgba(255, 0, 0, 0.731);
-    color: white;
-    border: none;
-    cursor: pointer;
-    padding: 2px 5px;
-    font-size: 12px;
-    border-radius: 360px;
-  }
-  
-  .remove-item:hover {
-    background-color: darkred;
-  }
-  
+.numbers,
+.symbols {
+  display: flex;
+  margin: 10px;
+}
+
+.drag-item {
+  width: 40px;
+  height: 40px;
+  margin: 5px;
+  padding: 10px;
+  background-color: #eee;
+  border: 1px solid #ccc;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: grab;
+  font-size: 1.2em;
+}
+
+.equation {
+  display: flex;
+  margin: 20px;
+}
+
+.check-button {
+  margin: 20px;
+}
+
+.result {
+  color: lime;
+  margin-top: 20px;
+  font-size: 1.5em;
+}
+
+.drop-box {
+  position: relative; /* Set position to relative */
+  width: 40px;
+  height: 40px;
+  margin: 5px;
+  padding: 10px;
+  background-color: #fff;
+  border: 2px dashed #ccc;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2em;
+}
+
+.remove-item {
+  position: absolute; /* Set position to absolute */
+  top: 5px; /* Adjust top position */
+  right: 5px; /* Adjust right position */
+  background-color: rgba(255, 0, 0, 0.731);
+  color: white;
+  border: none;
+  cursor: pointer;
+  padding: 2px 5px;
+  font-size: 12px;
+  border-radius: 360px;
+}
+
+.remove-item:hover {
+  background-color: darkred;
+}
