@@ -2,7 +2,8 @@ import React, { useState, useEffect } from "react";
 import { useWebSocket } from "../contexts/WebSocketContext";
 import { useAuth } from "../contexts/AuthContext";
 import { useRoom } from "../contexts/RoomContext";
-import Chat from "./Chat";
+import { useSelector, useDispatch } from "react-redux";
+import { setCurrentWord, checkAnswer } from "../redux/gameRoom/gameSlice";
 import "../styles/FillInTheBlanks.css";
 
 const FillInTheBlanks = ({ onGameSwitch }) => {
@@ -11,14 +12,20 @@ const FillInTheBlanks = ({ onGameSwitch }) => {
   const { currentRoom, setCurrentRoom } = useRoom();
 
   const [currentPlayers, setCurrentPlayers] = useState(0);
-  const [currentWord, setCurrentWord] = useState("");
+  // const [currentWord, setCurrentWord] = useState("");
   const [currentClue, setCurrentClue] = useState("");
   const [roundWinner, setRoundWinner] = useState("");
   const [roundStatus, setRoundStatus] = useState("in progress");
   const [countdown, setCountdown] = useState(-1);
   const [loading, setLoading] = useState(true);
 
-  //comment to commit preredux changes
+  const dispatch = useDispatch();
+  const currentWord = useSelector((state) => state.gameRoom.currentWord);
+
+  const handleNewWord = (word) => {
+    dispatch(setCurrentWord(word));
+  };
+
 
   const handleBeforeUnload = () => {
     if (client && client.readyState === WebSocket.OPEN) {

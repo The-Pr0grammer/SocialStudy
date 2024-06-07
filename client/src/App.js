@@ -1,5 +1,6 @@
-//App.js
 import React from "react";
+import { Provider } from 'react-redux';
+import store from './redux/store';
 import {
   BrowserRouter as Router,
   Routes,
@@ -20,10 +21,9 @@ import {
   ChillRoom,
 } from "./components";
 import "./App.css";
-import DragAndDropMathGame from "./components/DragAndDrop";
 
 function AppRoutes() {
-  const { isLoggedIn } = useAuth();
+  const { isLoggedIn } = useAuth();  // Ensure useAuth is actually exported and used correctly
 
   return (
     <Routes>
@@ -48,15 +48,18 @@ function AppRoutes() {
 
 function App() {
   return (
-    <Router>
-      <AuthProvider>
-        <RoomProvider>
-          <WebSocketProvider>
-            <AppRoutes />
-          </WebSocketProvider>
-        </RoomProvider>
-      </AuthProvider>
-    </Router>
+    <Provider store={store}> {/* Redux Provider wrapping everything */}
+      <Router>
+        <AuthProvider>
+          <RoomProvider>
+            <WebSocketProvider>
+              {/* All components inside here can now access Redux store */}
+              <AppRoutes />
+            </WebSocketProvider>
+          </RoomProvider>
+        </AuthProvider>
+      </Router>
+    </Provider>
   );
 }
 
