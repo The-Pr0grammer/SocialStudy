@@ -47,12 +47,11 @@ const DropBox = ({ id, accept, onDrop, children }) => {
   return (
     <div ref={ref} className="drop-box">
       {children}
-      {children &&
-        id !== 3 && ( // Render the "X" button only if there's an item and it's not the "=" box
-          <button className="remove-item" onClick={handleRemoveItem}>
-            X
-          </button>
-        )}
+      {children && (
+        <button className="remove-item" onClick={handleRemoveItem}>
+          X
+        </button>
+      )}
     </div>
   );
 };
@@ -146,7 +145,7 @@ const DragAndDrop = ({ onGameSwitch }) => {
     }
   }, [client]);
 
-  const [equation, setEquation] = useState(["", "", "", "=", ""]);
+  const [equation, setEquation] = useState(["", "", "", "", ""]);
   const [result, setResult] = useState(null);
 
   const numbers = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "0"];
@@ -162,39 +161,29 @@ const DragAndDrop = ({ onGameSwitch }) => {
   };
 
   const checkEquation = () => {
-    const lhs = equation
-      .slice(0, equation.indexOf("="))
-      .join("")
-      .replace("X", "*");
-    const rhs = equation
-      .slice(equation.indexOf("=") + 1)
-      .join("")
-      .replace("X", "*");
-    console.log("LHS:", lhs, "RHS:", rhs); // Debugging log
-
+    const formattedEquation = equation.join("").replace(/X/g, "*"); // Ensure multiplication is represented correctly
     try {
-      // eslint-disable-next-line no-eval
-      const evalLhs = eval(lhs);
-      // eslint-disable-next-line no-eval
-      const evalRhs = eval(rhs);
-      if (evalLhs === evalRhs) {
-        setResult("Correct");
-        setTimeout(() => {
-          setResult(null);
-        }, 3000);
-        setEquation(["", "", "", "=", ""]); // Reset equation to initial state
-      } else {
-        setResult("Incorrect");
-      }
-    } catch (e) {
+      const evalResult = eval(formattedEquation);
+      setResult(`Result: ${evalResult}`); // Displaying result
+    } catch (error) {
       setResult("Invalid equation");
     }
   };
 
+  useEffect(() => {
+    const formattedEquation = equation.join("").replace(/X/g, "*"); // Ensure multiplication is represented correctly
+    try {
+      const evalResult = eval(formattedEquation);
+      setResult(`Result: ${evalResult}`); // Displaying result
+    } catch (error) {
+      setResult("Invalid equation");
+    }
+  }, [equation]);
+
   return (
     <DndProvider backend={HTML5Backend}>
       <div className="math-game">
-        <div style={{ height: "45%", color: "white" }}>
+        <div className="heading">
           <h1>Math Mayhem</h1>
           <p>
             Drag and drop the numbers and symbols to complete a valid equation.

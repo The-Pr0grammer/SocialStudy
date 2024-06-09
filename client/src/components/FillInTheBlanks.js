@@ -21,39 +21,10 @@ const FillInTheBlanks = ({ onGameSwitch }) => {
   const currentWord = useSelector((state) => state.gameRoom.currentWord);
   const dispatch = useDispatch();
 
-  const handleBeforeUnload = () => {
-    if (client && client.readyState === WebSocket.OPEN) {
-      client.send(
-        JSON.stringify({
-          type: "leaveRoom",
-          user: username,
-          room: "gameRoom",
-        })
-      );
-    }
-    setCurrentRoom(null);
-  };
-
-  useEffect(() => {
-    window.addEventListener("beforeunload", handleBeforeUnload);
-
-    return () => {
-      if (client && client.readyState === WebSocket.OPEN) {
-        client.send(
-          JSON.stringify({
-            type: "leaveRoom",
-            user: username,
-            room: "gameRoom",
-          })
-        );
-      }
-      setCurrentRoom(null);
-      window.removeEventListener("beforeunload", handleBeforeUnload);
-    };
-  }, []);
-
   useEffect(() => {
     setCurrentRoom("gameRoom");
+
+    console.log("WebSocketContext.js: Checking if client is open...", client);
 
     if (client && client.readyState === WebSocket.OPEN && username) {
       client.send(
@@ -88,15 +59,17 @@ const FillInTheBlanks = ({ onGameSwitch }) => {
             dispatch(setCurrentWord(data.word));
             setCurrentClue(data.clue);
             break;
-          case "countdown":
-            setCountdown(data.countdown);
-            break;
-          case "updateRoundStatus":
-            setRoundStatus(data.roundStatus);
+          case "updateRoundWinner":
             setRoundWinner(data.roundWinner);
             break;
           case "playerCount":
             setCurrentPlayers(data.playerCount);
+            break;
+          case "updateRoundStatus":
+            setRoundStatus(data.roundStatus);
+            break;
+          case "switchGame":
+            onGameSwitch(data.game);
             break;
           default:
             break;
@@ -112,7 +85,12 @@ const FillInTheBlanks = ({ onGameSwitch }) => {
   }, [client]);
 
   if (loading) {
-    return <div>Loading...</div>;
+    return (
+      <div style={{ textSize: "2.5em" }}>
+        Loading Loading Loading Loading Loading Loading Loading Loading Loading
+        Loading Loading Loading Loading...
+      </div>
+    );
   }
 
   return (
@@ -147,15 +125,9 @@ const FillInTheBlanks = ({ onGameSwitch }) => {
         </div>
       )}
 
-      {roundStatus === "correct" && (
+      {roundStatus === "complete" && (
         <div className="status">
           <h1>{roundWinner} got the answer correct!</h1>
-        </div>
-      )}
-
-      {roundStatus === "no winner" && (
-        <div className="status">
-          <h1>No one got the answer correct!</h1>
         </div>
       )}
     </div>

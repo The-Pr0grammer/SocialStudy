@@ -4,7 +4,7 @@ const bodyParser = require("body-parser");
 const session = require("express-session");
 const passport = require("./config/passport.js");
 const path = require("path");
-const initializeWebSocketServer = require("./server.js");
+const { initializeWebSocketServer } = require('./server');
 const pg = require("pg");
 
 const app = express();

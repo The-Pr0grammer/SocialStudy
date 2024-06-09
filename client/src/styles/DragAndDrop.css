@@ -6,6 +6,11 @@
   background-color: rgba(10, 10, 10, 0.85);
 }
 
+.heading {
+  height: 25%;
+  color: white;
+}
+
 .numbers,
 .symbols {
   display: flex;
