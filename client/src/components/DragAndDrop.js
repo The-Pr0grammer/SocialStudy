@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
-import { setTargetNumber } from "../redux/gameRoom/gameSlice";
+import { setCountdown } from "../redux/gameRoom/gameSlice";
 import { useWebSocket } from "../contexts/WebSocketContext";
 import { useAuth } from "../contexts/AuthContext";
 import { DndProvider, useDrag, useDrop } from "react-dnd";
@@ -61,14 +61,25 @@ const DragAndDrop = () => {
   const { client } = useWebSocket();
   const { username } = useAuth();
   const [loading, setLoading] = useState(true);
-  const [countdown, setCountdown] = useState(-1);
 
   const targetNumber = useSelector((state) => state.gameRoom.targetNumber);
   const roundWinner = useSelector((state) => state.gameRoom.roundWinner);
   const roundStatus = useSelector((state) => state.gameRoom.roundStatus);
   const currentPlayers = useSelector((state) => state.gameRoom.playerCount);
+  const countdown = useSelector((state) => state.gameRoom.countdown);
+  const [localCountdown, setLocalCountdown] = useState(countdown);
+  const dispatch = useDispatch();
+
+  let countInterval = null;
+
+  const [equation, setEquation] = useState(["", "", "", "", ""]);
+  const [result, setResult] = useState(null);
+
+  const numbers = ["1", "2", "3", "4", "5", "6", "7", "8", "9"];
+  const symbols = ["+", "-", "X", "/"];
 
   useEffect(() => {
+    console.log("DragAndDrop.js: Setting up game", equation);
     if (!client || client.readyState !== WebSocket.OPEN || !username) {
       setLoading(true);
       console.log("Client is not ready or user is not logged in.");
@@ -81,15 +92,31 @@ const DragAndDrop = () => {
       })
     );
 
+    client.send(
+      JSON.stringify({
+        type: "requestCountdown",
+      })
+    );
+
     // Set loading to false once the client is connected and handlers are set
     setLoading(false);
   }, [client]);
 
-  const [equation, setEquation] = useState(["", "", "", "", ""]);
-  const [result, setResult] = useState(null);
+  useEffect(() => {
+    // Initialize local countdown state
+    setLocalCountdown(countdown);
 
-  const numbers = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "0"];
-  const symbols = ["+", "-", "X", "/"];
+    // Setup the interval
+    const countInterval = setInterval(() => {
+      setLocalCountdown((prevCount) => {
+        console.log("Local Countdown:", prevCount - 1); // Debugging log
+        return prevCount - 1;
+      });
+    }, 1000);
+
+    // Cleanup interval on component unmount or countdown change
+    return () => clearInterval(countInterval);
+  }, [countdown]); // Dependency on countdown from Redux
 
   const handleDrop = (index, item) => {
     console.log("Dropped item:", item, "at index:", index); // Debugging log
@@ -104,7 +131,11 @@ const DragAndDrop = () => {
     const formattedEquation = equation.join("").replace(/X/g, "*"); // Ensure multiplication is represented correctly
     try {
       const evalResult = eval(formattedEquation);
-      setResult(`Result: ${evalResult}`); // Displaying result
+      if (!equation.every((element) => element === "")) {
+        setResult(`${evalResult}`); // Displaying result if not all boxes are empty
+      } else {
+        setResult(null);
+      }
     } catch (error) {
       setResult("Invalid equation");
     }
@@ -114,7 +145,11 @@ const DragAndDrop = () => {
     const formattedEquation = equation.join("").replace(/X/g, "*"); // Ensure multiplication is represented correctly
     try {
       const evalResult = eval(formattedEquation);
-      setResult(`Result: ${evalResult}`); // Displaying result
+      if (!equation.every((element) => element === "")) {
+        setResult(`${evalResult}`); // Displaying result if not all boxes are empty
+      } else {
+        setResult(null);
+      }
     } catch (error) {
       setResult("Invalid equation");
     }
@@ -133,7 +168,11 @@ const DragAndDrop = () => {
             Drag and drop the numbers and symbols to complete a valid equation.
           </p>
         </div>
-        {result !== null && <div className="result">Result: {result}</div>}
+        <div className="info-row">
+          <h2 className="target">Target Number: {targetNumber}</h2>
+          <p className="countdown">Countdown: {localCountdown}</p>
+        </div>
+        <div className="result"> Result: {result}</div>
         <div className="numbers">
           {numbers.map((number) => (
             <DragItem key={number} id={number} type={ItemTypes.ITEM}>

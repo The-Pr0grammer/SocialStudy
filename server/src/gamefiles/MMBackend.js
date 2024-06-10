@@ -11,29 +11,37 @@ const generateTargetNumber = () => {
     operations[Math.floor(Math.random() * operations.length)],
   ];
 
-  // Ensure division results in a whole number
+  // Adjusting numbers to ensure division results in a whole number
   if (chosenOperations[0] === "/") {
-    chosenNumbers[1] = chosenNumbers[0] * chosenNumbers[1]; // Adjust second number to be a multiple of the first
+    chosenNumbers[1] = chosenNumbers[0] * (Math.floor(Math.random() * 8) + 1); // Ensure the denominator is a non-zero product of the numerator
   }
-  if (chosenOperations[1] === "/" && chosenOperations[0] !== "/") {
-    chosenNumbers[2] = chosenNumbers[1] * chosenNumbers[2]; // Adjust third number to be a multiple of the second
+  if (chosenOperations[1] === "/") {
+    chosenNumbers[2] = chosenNumbers[1] * (Math.floor(Math.random() * 8) + 1); // Ensure the denominator is a non-zero product of the second number
   }
 
+  // Form the equation
   const equation = `${chosenNumbers[0]} ${chosenOperations[0]} ${chosenNumbers[1]} ${chosenOperations[1]} ${chosenNumbers[2]}`;
-  const targetNumber = eval(equation);
-  return { targetNumber };
+  const targetNumber = Math.floor(eval(equation)); // Ensure the result is a whole number
+  return targetNumber;
 };
 
-//MMBackend.js
-const { getCurrentGame, switchGame } = require("./GameEvents");
 
+//MMBackend.js
 let roundWinner = "";
-let countdown = 10;
+let countdown = 100;
 let gameTimer;
 let targetNumber = null;
 
-function startGame(getConnections) {
+let gameController = null;
+
+const setGameController = (controller) => {
+  gameController = controller;
+};
+
+function startGame(connections) {
   targetNumber = generateTargetNumber();
+  broadcastTargetNumber(connections);
+  broadCastCountdown(connections);
 
   if (gameTimer) {
     console.log("An interval already exists, skipping new interval setup.");
@@ -41,9 +49,10 @@ function startGame(getConnections) {
   }
 
   gameTimer = setInterval(() => {
+    console.log("Countdown:", countdown);
     countdown -= 1;
     if (countdown <= 0) {
-      endGame(getConnections());
+      endGame(connections);
     }
   }, 1000);
 }
@@ -63,6 +72,26 @@ function broadcastTargetNumber(connections) {
       JSON.stringify({
         type: "targetNumber",
         targetNumber: targetNumber,
+      })
+    );
+  }
+}
+
+function getCountdown(connection) {
+  connection.sendUTF(
+    JSON.stringify({
+      type: "countdown",
+      countdown: countdown,
+    })
+  );
+}
+
+function broadCastCountdown(connections) {
+  for (let key in connections) {
+    connections[key].sendUTF(
+      JSON.stringify({
+        type: "countdown",
+        countdown: countdown,
       })
     );
   }
@@ -91,33 +120,25 @@ function broadcastRoundStatus(connections) {
   }
 }
 
-function getCountdown(connection) {
-  connection.sendUTF(
-    JSON.stringify({
-      type: "countdown",
-      countdown: countdown,
-    })
-  );
-}
-
-function endGame(connections) {
+function endGame(connections, source) {
   broadcastRoundWinner(connections, roundWinner);
   broadcastRoundStatus(connections);
   clearInterval(gameTimer);
   gameTimer = null; // Reset the timer to null after clearing
-  countdown = 10;
-
+  targetNumber = null;
+  countdown = 100;
+  
   setTimeout(() => {
-    switchGame(connections, "dragAndDrop");
-    targetNumber = null;
+    gameController.switchGame("dragAndDrop");
   }, 3000);
 }
 
 module.exports = {
+  setGameController,
   startGame,
   getTargetNumber,
-  getCountdown,
   broadcastTargetNumber,
+  getCountdown,
   broadcastRoundWinner,
   endGame,
 };

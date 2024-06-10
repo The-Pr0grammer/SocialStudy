@@ -11,7 +11,6 @@ const FillInTheBlanks = () => {
 
   const [countdown, setCountdown] = useState(-1);
   const [loading, setLoading] = useState(true);
-  
 
   const currentWord = useSelector((state) => state.gameRoom.currentWord);
   const currentPlayers = useSelector((state) => state.gameRoom.playerCount);

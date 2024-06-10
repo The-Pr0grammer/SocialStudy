@@ -1,13 +1,16 @@
 const webSocket = require("websocket");
 const http = require("http");
+const connections = {}; // This will store all active connections.
 
+const GameController = require("./gamefiles/GameController");
 const FITBBackend = require("./gamefiles/FITBBackend");
 const MMBackend = require("./gamefiles/MMBackend.js");
-const { getCurrentGame, switchGame } = require("./gamefiles/GameEvents");
+
+const gameController = new GameController(connections);
+FITBBackend.setGameController(gameController);
+MMBackend.setGameController(gameController);
 
 const confirmationTimeout = null;
-let currentGame = ["fillInTheBlanks, dragAndDrop"]; // This will track the current game mode.
-const connections = {}; // This will store all active connections.
 
 function initializeWebSocketServer(app) {
   const websSocketServerPort = 8000;
@@ -89,7 +92,7 @@ function handleMessage(data, connection, rooms, id) {
       FITBBackend.getCurrentWord(connection);
       break;
     case "checkAnswer":
-      FITBBackend.checkAnswer(data.message, data.user, () => connections);
+      FITBBackend.checkAnswer(data.message, data.user, connections);
       break;
     case "requestNumber":
       MMBackend.getTargetNumber(connection);
@@ -131,15 +134,14 @@ function updatePlayerCount(action, rooms, connection) {
     console.log(`Player joined ${room}. Total players: ${roomSet.size}`);
     if (roomSet.size === 1) {
       console.log("Starting game due to first player join.");
-      switchGame(connections, "fillInTheBlanks");
-      FITBBackend.startGame(() => connections);
+      gameController.switchGame("dragAndDrop");
     }
   } else if (action === "leaveRoom") {
     roomSet.delete(connection);
     console.log(`Player left ${room}. Total players: ${roomSet.size}`);
     if (roomSet.size === 0) {
       console.log("Stopping game due to no players left.");
-      FITBBackend.endGame(() => connections);
+      gameController.endGame("noPlayers");
     }
   }
 

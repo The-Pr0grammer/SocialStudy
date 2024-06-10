@@ -7,6 +7,7 @@ const gameSlice = createSlice({
     currentWord: "",
     currentClue: "",
     targetNumber: "",
+    countdown : 0,
     roundWinner: "",
     roundStatus: "",
     playerCount: 0,
@@ -24,6 +25,9 @@ const gameSlice = createSlice({
     },
     setTargetNumber(state, action) {
       state.targetNumber = action.payload;
+    },
+    setCountdown(state, action) {
+      state.countdown = action.payload;
     },
     setRoundWinner(state, action) {
       state.roundWinner = action.payload;
@@ -48,6 +52,7 @@ export const {
   setCurrentWord,
   setCurrentClue,
   setTargetNumber,
+  setCountdown,
   setRoundWinner,
   setRoundStatus,
   setPlayerCount,
@@ -68,6 +73,7 @@ export const checkAnswer =
       client.readyState === WebSocket.OPEN &&
       answer.toLowerCase().length === currentWord.length
     ) {
+      console.log("Checking answer:", answer);
       client.send(
         JSON.stringify({
           type: "checkAnswer",

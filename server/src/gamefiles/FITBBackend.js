@@ -28,14 +28,18 @@ const generateRandomizedBlanks = (word, wordWithBlanks, initial) => {
 
 // FITBBackend.js
 const WordDatabase = require("./WordDatabase");
-const { getCurrentGame, switchGame } = require("./GameEvents");
-
 let currentWordIndex = Math.floor(Math.random() * WordDatabase.length);
 let currentWord = "";
 let roundWinner = "";
 let gameTimer;
 
-function startGame(getConnections) {
+let gameController = null;
+
+const setGameController = (controller) => {
+  gameController = controller;
+};
+
+function startGame(connections) {
   if (gameTimer) {
     console.log("A game timer already exists. Skipping setup of new game.");
     return; // Prevent setting up a new interval if one already exists
@@ -47,7 +51,7 @@ function startGame(getConnections) {
     true
   );
 
-  broadcastCurrentWord(getConnections());
+  broadcastCurrentWord(connections);
 
   gameTimer = setInterval(() => {
     currentWord = generateRandomizedBlanks(
@@ -58,10 +62,10 @@ function startGame(getConnections) {
 
     if (!currentWord.includes("_")) {
       console.log("Game completed. No blanks left.");
-      broadcastRoundWinner(getConnections(), "No one");
-      endGame(getConnections());
+      broadcastRoundWinner(connections, "No one");
+      endGame(connections);
     } else {
-      broadcastCurrentWord(getConnections());
+      broadcastCurrentWord(connections);
     }
   }, 5000);
 }
@@ -88,12 +92,12 @@ function broadcastCurrentWord(connections) {
   }
 }
 
-function checkAnswer(answer, username, getConnections) {
+function checkAnswer(answer, username, connections) {
   if (
     answer.toLowerCase() === WordDatabase[currentWordIndex].word.toLowerCase()
   ) {
-    broadcastRoundWinner(getConnections(), username);
-    endGame(getConnections());
+    broadcastRoundWinner(connections, username);
+    endGame(connections);
   }
 }
 
@@ -120,15 +124,23 @@ function broadcastRoundStatus(connections) {
   }
 }
 
-function endGame(connections) {
+function endGame(connections, source) {
   revealWord(connections);
-  broadcastRoundWinner(connections, roundWinner);
+
   broadcastRoundStatus(connections);
   clearInterval(gameTimer);
   gameTimer = null; // Reset the timer to null after clearing
 
+  newIndex = Math.floor(Math.random() * WordDatabase.length);
+  
+  while (newIndex === currentWordIndex) {
+    newIndex = Math.floor(Math.random() * WordDatabase.length);
+  }
+  
+  currentWordIndex = newIndex;
+
   setTimeout(() => {
-    switchGame(connections, "fillInTheBlanks");
+    gameController.switchGame("fillInTheBlanks");
   }, 3000);
 }
 
@@ -145,6 +157,7 @@ function revealWord(connections) {
 }
 
 module.exports = {
+  setGameController,
   startGame,
   getCurrentWord,
   broadcastCurrentWord,

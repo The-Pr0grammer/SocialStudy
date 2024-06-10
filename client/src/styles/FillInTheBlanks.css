@@ -25,20 +25,3 @@
   justify-content: center;
   align-items: center;
 }
-
-.countdown {
-  position: fixed;
-  bottom: 45%;
-  left: 35%;
-  width: 30%;
-  background-color: rgba(10, 10, 10, 0.5);
-  border: 0.1px solid #ccc; /* Optional: Add a top border */
-  box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.1); /* Optional: Add shadow for better visibility */
-  padding: 10px; /* Adjust padding as needed */
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 1000; /* Ensure the player is above other content */
-  color: rgb(255, 0, 98);
-  border-radius: 100px;
-}

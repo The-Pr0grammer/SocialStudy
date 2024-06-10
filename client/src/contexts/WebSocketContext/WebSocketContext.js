@@ -13,6 +13,7 @@ import {
   setCurrentWord,
   setCurrentClue,
   setTargetNumber,
+  setCountdown,
   setRoundWinner,
   setRoundStatus,
   setPlayerCount,
@@ -59,12 +60,18 @@ export const WebSocketProvider = ({ children }) => {
           dispatch(setCurrentClue(data.clue));
           break;
         case "targetNumber":
+          console.log("Setting target number to:", data.targetNumber);
           dispatch(setTargetNumber(data.targetNumber));
+          break;
+        case "countdown":
+          console.log("Setting countdown to:", data.countdown);
+          dispatch(setCountdown(data.countdown));
           break;
         case "updateRoundWinner":
           dispatch(setRoundWinner(data.roundWinner));
           break;
         case "updateRoundStatus":
+          console.log("Setting round status to:", data.roundStatus);
           dispatch(setRoundStatus(data.roundStatus));
           break;
         case "playerCount":

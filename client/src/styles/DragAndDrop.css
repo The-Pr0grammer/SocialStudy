@@ -11,6 +11,35 @@
   color: white;
 }
 
+.info-row {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  width: 90%;
+  /* background-color: rgba(255, 0, 0, 0.731); */
+}
+
+.target {
+  color: rgb(255, 0, 98);
+}
+
+.countdown {
+  /* position: fixed; */
+  bottom: 45%;
+  left: 35%;
+  width: 30%;
+  background-color: rgba(10, 10, 10, 0.5);
+  border: 0.1px solid #ccc; 
+  box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.1); 
+  padding: 10px; 
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000; 
+  color: rgb(255, 0, 98);
+  border-radius: 100px;
+}
+
 .numbers,
 .symbols {
   display: flex;
