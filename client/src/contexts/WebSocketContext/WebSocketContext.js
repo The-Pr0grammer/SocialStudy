@@ -7,27 +7,33 @@ import React, {
 } from "react";
 import { w3cwebsocket as W3CWebSocket } from "websocket";
 import { useAuth } from "../AuthContext";
-import { useRoom } from "../RoomContext";
+import { useSelector, useDispatch } from "react-redux";
+import {
+  setCurrentGame,
+  setCurrentWord,
+  setCurrentClue,
+  setTargetNumber,
+  setRoundWinner,
+  setRoundStatus,
+  setPlayerCount,
+  setMessages,
+} from "../../redux/gameRoom/gameSlice";
 
 const WebSocketContext = createContext();
 
 export const WebSocketProvider = ({ children }) => {
-  const { isLoggedIn, username } = useAuth();
-  const { currentRoom } = useRoom();
+  const { isLoggedIn } = useAuth();
   const [client, setClient] = useState(null);
   const clientID = useRef(Math.trunc(Math.random() * 1000));
   const isConnecting = useRef(false);
+  const dispatch = useDispatch();
 
   const connectToServer = () => {
     if (isConnecting.current || client) {
       return;
     }
-    isConnecting.current = true;
 
-    console.log(
-      "WebSocketContext.js: Attempting to connect to server...",
-      clientID.current
-    );
+    isConnecting.current = true;
 
     const socketClient = new W3CWebSocket("ws://127.0.0.1:8000");
 
@@ -37,22 +43,64 @@ export const WebSocketProvider = ({ children }) => {
       isConnecting.current = false;
     };
 
-    socketClient.onmessage = (message) => {
+    const handleMessage = (message) => {
       const data = JSON.parse(message.data);
-      console.log("WebSocketContext.js: Message received", data);
+
+      switch (data.type) {
+        case "connectionConfirmation":
+          sendAcknowledgement(socketClient);
+          break;
+        case "switchGame":
+          console.log("Switching game to:", data.game);
+          dispatch(setCurrentGame(data.game));
+          break;
+        case "currentWord":
+          dispatch(setCurrentWord(data.word));
+          dispatch(setCurrentClue(data.clue));
+          break;
+        case "targetNumber":
+          dispatch(setTargetNumber(data.targetNumber));
+          break;
+        case "updateRoundWinner":
+          dispatch(setRoundWinner(data.roundWinner));
+          break;
+        case "updateRoundStatus":
+          dispatch(setRoundStatus(data.roundStatus));
+          break;
+        case "playerCount":
+          dispatch(setPlayerCount(data.playerCount));
+          break;
+        case "updateChat":
+          dispatch(setMessages(data));
+          break;
+        default:
+          console.log("Unhandled message type:", data.type);
+          break;
+      }
     };
 
+    // Add the message listener once
+    socketClient.addEventListener("message", handleMessage);
+
     socketClient.onerror = (error) => {
-      console.error("WebSocketContext.js: Connection error:", clientID.current, error);
+      console.error(
+        "WebSocketContext.js: Connection error:",
+        clientID.current,
+        error
+      );
       isConnecting.current = false;
     };
 
     socketClient.onclose = () => {
       console.log("WebSocketContext.js: Connection closed", clientID.current);
-      setClient(null);
-      isConnecting.current = false;
+      socketClient.removeEventListener("message", handleMessage);
+
       // Optionally reconnect
-      setTimeout(() => connectToServer(), 5000);
+      setTimeout(() => {
+        connectToServer();
+
+        console.log("WebSocketContext.js: Reconnecting...", clientID.current);
+      }, 1000);
     };
 
     return socketClient;
@@ -60,26 +108,32 @@ export const WebSocketProvider = ({ children }) => {
 
   const handleDisconnect = () => {
     if (client) {
-      console.log("WebSocketContext.js: Disconnecting client", clientID.current);
+      console.log(
+        "Handling disconnect...Cleaning up WebSocket event listeners...",
+        clientID.current
+      );
+      setClient(null);
+      isConnecting.current = false;
       client.close();
     }
   };
 
-  useEffect(() => {
-    if (!isLoggedIn) {
-      handleDisconnect();
-      return;
-    }
+  const sendAcknowledgement = (sc) => {
+    console.log("Sending connection acknowledgement...", clientID.current);
+    sc.send(JSON.stringify({ type: "connectionAcknowledgement" }));
+  };
 
-    let socketClient = connectToServer();
+  useEffect(() => {
+    if (isLoggedIn) {
+      connectToServer();
+    }
 
     window.onbeforeunload = () => handleDisconnect();
 
     return () => {
-      console.log("WebSocketContext.js: Cleaning up WebSocket connection", clientID.current);
       handleDisconnect();
     };
-  }, [isLoggedIn]);  // Depend on isLoggedIn to reconnect when auth state changes
+  }, [isLoggedIn]); // Depend on isLoggedIn to reconnect when auth state changes
 
   return (
     <WebSocketContext.Provider value={{ client }}>

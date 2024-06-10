@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useSelector } from "react-redux";
 import { useWebSocket } from "../contexts/WebSocketContext";
 import { useAuth } from "../contexts/AuthContext";
 import { useRoom } from "../contexts/RoomContext";
@@ -8,10 +9,10 @@ import Chat from "./Chat";
 import "../styles/GameRoom.css";
 
 const GameRoom = () => {
-  const [currentGame, setCurrentGame] = useState("fillInTheBlanks");
   const { client } = useWebSocket();
   const { username } = useAuth();
-  const { currentRoom, setCurrentRoom } = useRoom();
+  const { setCurrentRoom } = useRoom();
+  const currentGame = useSelector((state) => state.gameRoom.currentGame);
 
   const handleBeforeUnload = () => {
     if (client && client.readyState === WebSocket.OPEN) {
@@ -44,8 +45,14 @@ const GameRoom = () => {
     };
   }, []);
 
+  //leave room when component unmounts
   useEffect(() => {
     setCurrentRoom("gameRoom");
+
+    if (!client || client.readyState !== WebSocket.OPEN || !username) {
+      console.log("Client is not ready or user is not logged in. GameRoom");
+      return;
+    }
 
     if (client && client.readyState === WebSocket.OPEN && username) {
       client.send(
@@ -58,21 +65,12 @@ const GameRoom = () => {
     }
   }, [client]);
 
-  const handleGameSwitch = () => {
-    setCurrentGame(
-      currentGame === "fillInTheBlanks" ? "dragAndDrop" : "fillInTheBlanks"
-    );
-  };
-
   return (
     <div className="main">
-      <div className="change-game">
-        <button onClick={() => handleGameSwitch()}>Change Game</button>
-      </div>
       {currentGame === "fillInTheBlanks" ? (
-        <FillInTheBlanks onGameSwitch={handleGameSwitch} />
+        <FillInTheBlanks />
       ) : (
-        <DragAndDrop onGameSwitch={handleGameSwitch} />
+        <DragAndDrop />
       )}
       <div className="chatbox">
         <Chat />

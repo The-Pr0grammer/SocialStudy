@@ -1,10 +1,11 @@
 const webSocket = require("websocket");
 const http = require("http");
-const FITBBackend = require("./FITBBackend");
-const { getCurrentGame, switchGame } = require("./GameEvents");
-const generateTargetNumber = require("./TargetNumberGenerator.js");
-const confirmationTimeout = null;
 
+const FITBBackend = require("./gamefiles/FITBBackend");
+const MMBackend = require("./gamefiles/MMBackend.js");
+const { getCurrentGame, switchGame } = require("./gamefiles/GameEvents");
+
+const confirmationTimeout = null;
 let currentGame = ["fillInTheBlanks, dragAndDrop"]; // This will track the current game mode.
 const connections = {}; // This will store all active connections.
 
@@ -60,7 +61,7 @@ function setupConnectionHandlers(connection, id, rooms) {
 
   connection.on("message", function (message) {
     const data = JSON.parse(message.utf8Data);
-    handleMessage(data, connection, rooms);
+    handleMessage(data, connection, rooms, id);
   });
 
   connection.on("close", function (reasonCode, description) {
@@ -75,17 +76,26 @@ function setupConnectionHandlers(connection, id, rooms) {
   });
 }
 
-function handleMessage(data, connection, rooms) {
-  console.log("server.js: Broadcasting chat message...");
+function handleMessage(data, connection, rooms, id) {
   switch (data.type) {
     case "connectionAcknowledgement":
-      console.log("server.js: Client acknowledgement confirmed.");
+      console.log(
+        "server.js: Client" +
+          id +
+          " acknowledgement confirmed. You are cleared for takeoff 🛫"
+      );
       break;
     case "requestWord":
       FITBBackend.getCurrentWord(connection);
       break;
     case "checkAnswer":
       FITBBackend.checkAnswer(data.message, data.user, () => connections);
+      break;
+    case "requestNumber":
+      MMBackend.getTargetNumber(connection);
+      break;
+    case "requestCountdown":
+      MMBackend.getCountdown(connection);
       break;
     case "joinRoom":
       updatePlayerCount("joinRoom", rooms, connection);
@@ -101,11 +111,10 @@ function handleMessage(data, connection, rooms) {
 }
 
 function broadcastChatMessage(message, user) {
-  console.log("server.js: Broadcasting chat message...", message, user);
   for (let key in connections) {
     connections[key].sendUTF(
       JSON.stringify({
-        type: "message",
+        type: "updateChat",
         message: message,
         user: user,
       })
@@ -114,24 +123,27 @@ function broadcastChatMessage(message, user) {
 }
 
 function updatePlayerCount(action, rooms, connection) {
-  const room = "gameRoom"; // Example, this should be dynamic based on the client's action
+  const room = "gameRoom";
   const roomSet = rooms[room];
 
   if (action === "joinRoom") {
     roomSet.add(connection);
+    console.log(`Player joined ${room}. Total players: ${roomSet.size}`);
     if (roomSet.size === 1) {
-      // Start the game if this is the first player
+      console.log("Starting game due to first player join.");
+      switchGame(connections, "fillInTheBlanks");
       FITBBackend.startGame(() => connections);
     }
   } else if (action === "leaveRoom") {
     roomSet.delete(connection);
+    console.log(`Player left ${room}. Total players: ${roomSet.size}`);
     if (roomSet.size === 0) {
-      // Stop the game if all players have left
+      console.log("Stopping game due to no players left.");
       FITBBackend.endGame(() => connections);
     }
   }
 
-  //send the player count to all clients
+  // Broadcast the player count to all players in the room
   for (let key in connections) {
     connections[key].sendUTF(
       JSON.stringify({
@@ -140,8 +152,6 @@ function updatePlayerCount(action, rooms, connection) {
       })
     );
   }
-
-  console.log(`Updated player count in ${room}: ${roomSet.size}`);
 }
 
 function generateId() {

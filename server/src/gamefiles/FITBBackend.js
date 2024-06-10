@@ -1,5 +1,4 @@
 const generateRandomizedBlanks = (word, wordWithBlanks, initial) => {
-  console.log("generateRandomizedBlanks", word, wordWithBlanks, initial);
   // Split the word into characters
   const characters = initial ? word.split("") : wordWithBlanks.split("");
   let newBlankAdded = false;
@@ -15,9 +14,7 @@ const generateRandomizedBlanks = (word, wordWithBlanks, initial) => {
   else {
     while (!newBlankAdded) {
       const random = Math.trunc(Math.random() * (word.length - 0) + 0);
-
-      // console.log("RANDOMMMMMMMMM", random);
-
+      // Check if the character is not whitespace
       if (characters[random].trim() !== "" && characters[random] == "_") {
         characters[random] = word[random];
         newBlankAdded = true; // Mark that a blank has been added
@@ -40,8 +37,8 @@ let gameTimer;
 
 function startGame(getConnections) {
   if (gameTimer) {
-    console.log("An interval already exists, skipping new interval setup.");
-    return; // Skip setting a new interval if one already exists
+    console.log("A game timer already exists. Skipping setup of new game.");
+    return; // Prevent setting up a new interval if one already exists
   }
 
   currentWord = generateRandomizedBlanks(
@@ -52,7 +49,6 @@ function startGame(getConnections) {
 
   broadcastCurrentWord(getConnections());
 
-  console.log("Game Timer started for:", currentWord);
   gameTimer = setInterval(() => {
     currentWord = generateRandomizedBlanks(
       WordDatabase[currentWordIndex].word,
@@ -61,11 +57,10 @@ function startGame(getConnections) {
     );
 
     if (!currentWord.includes("_")) {
-      console.log("Game ended, no blanks left.");
+      console.log("Game completed. No blanks left.");
       broadcastRoundWinner(getConnections(), "No one");
       endGame(getConnections());
     } else {
-      console.log("Broadcasting current word status.");
       broadcastCurrentWord(getConnections());
     }
   }, 5000);
@@ -130,11 +125,10 @@ function endGame(connections) {
   broadcastRoundWinner(connections, roundWinner);
   broadcastRoundStatus(connections);
   clearInterval(gameTimer);
-  gameTimer = null;  // Reset the timer to null after clearing
-
+  gameTimer = null; // Reset the timer to null after clearing
 
   setTimeout(() => {
-    switchGame(connections);
+    switchGame(connections, "fillInTheBlanks");
   }, 3000);
 }
 

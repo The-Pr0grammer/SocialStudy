@@ -1,96 +1,43 @@
 import React, { useState, useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
-import { setCurrentWord } from "../redux/gameRoom/gameSlice";
+// import { setCurrentGame} from "../redux/gameRoom/gameSlice";
 import { useWebSocket } from "../contexts/WebSocketContext";
 import { useAuth } from "../contexts/AuthContext";
-import { useRoom } from "../contexts/RoomContext";
 import "../styles/FillInTheBlanks.css";
 
-const FillInTheBlanks = ({ onGameSwitch }) => {
+const FillInTheBlanks = () => {
   const { client } = useWebSocket();
   const { username } = useAuth();
-  const { currentRoom, setCurrentRoom } = useRoom();
 
-  const [currentPlayers, setCurrentPlayers] = useState(0);
-  const [currentClue, setCurrentClue] = useState("");
-  const [roundWinner, setRoundWinner] = useState("");
-  const [roundStatus, setRoundStatus] = useState("in progress");
   const [countdown, setCountdown] = useState(-1);
   const [loading, setLoading] = useState(true);
+  
 
   const currentWord = useSelector((state) => state.gameRoom.currentWord);
-  const dispatch = useDispatch();
+  const currentPlayers = useSelector((state) => state.gameRoom.playerCount);
+  const currentClue = useSelector((state) => state.gameRoom.currentClue);
+  const roundWinner = useSelector((state) => state.gameRoom.roundWinner);
+  const roundStatus = useSelector((state) => state.gameRoom.roundStatus);
 
   useEffect(() => {
-    setCurrentRoom("gameRoom");
-
-    console.log("WebSocketContext.js: Checking if client is open...", client);
-
-    if (client && client.readyState === WebSocket.OPEN && username) {
-      client.send(
-        JSON.stringify({
-          type: "joinRoom",
-          room: "gameRoom",
-          user: username,
-        })
-      );
-
-      client.send(
-        JSON.stringify({
-          type: "requestWord",
-        })
-      );
-
-      client.onmessage = (message) => {
-        const data = JSON.parse(message.data);
-
-        switch (data.type) {
-          case "connectionConfirmation":
-            console.log(
-              "WebSocketContext.js: Connection confirmation received, sending acknowledgement... from gameroom"
-            );
-            client.send(
-              JSON.stringify({
-                type: "connectionAcknowledgement",
-              })
-            );
-            break;
-          case "currentWord":
-            dispatch(setCurrentWord(data.word));
-            setCurrentClue(data.clue);
-            break;
-          case "updateRoundWinner":
-            setRoundWinner(data.roundWinner);
-            break;
-          case "playerCount":
-            setCurrentPlayers(data.playerCount);
-            break;
-          case "updateRoundStatus":
-            setRoundStatus(data.roundStatus);
-            break;
-          case "switchGame":
-            onGameSwitch(data.game);
-            break;
-          default:
-            break;
-        }
-      };
-
-      client.onclose = () => {
-        // console.log("FillInTheBlanks.js: WebSocket connection closed");
-      };
-
-      setLoading(false); // Set loading to false once the client is connected
+    if (!client || client.readyState !== WebSocket.OPEN || !username) {
+      setLoading(true);
+      console.log("Client is not ready or user is not logged in. FITB");
+      return;
     }
-  }, [client]);
+
+    client.send(
+      JSON.stringify({
+        type: "requestWord",
+      })
+    );
+
+    // Set loading to false once the client is connected and handlers are set
+    setLoading(false);
+  }, [client]); // Only re-run the effect if `client` changes
 
   if (loading) {
-    return (
-      <div style={{ textSize: "2.5em" }}>
-        Loading Loading Loading Loading Loading Loading Loading Loading Loading
-        Loading Loading Loading Loading...
-      </div>
-    );
+    return <div style={{ textSize: "2.5em" }}>Loading...</div>;
   }
 
   return (
