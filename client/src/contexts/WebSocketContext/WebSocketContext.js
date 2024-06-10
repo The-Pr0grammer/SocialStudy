@@ -19,7 +19,7 @@ export const WebSocketProvider = ({ children }) => {
   const isConnecting = useRef(false);
 
   const connectToServer = () => {
-    if (isConnecting.current) {
+    if (isConnecting.current || client) {
       return;
     }
     isConnecting.current = true;
@@ -32,87 +32,54 @@ export const WebSocketProvider = ({ children }) => {
     const socketClient = new W3CWebSocket("ws://127.0.0.1:8000");
 
     socketClient.onopen = () => {
+      console.log("WebSocketContext.js: Connected to server", clientID.current);
       setClient(socketClient);
       isConnecting.current = false;
-      console.log("WebSocketContext.js: Connected to server", clientID.current);
     };
 
     socketClient.onmessage = (message) => {
       const data = JSON.parse(message.data);
-      if (data.type === "connectionConfirmation") {
-        console.log(
-          "WebSocketContext.js: Connection confirmation received, sending acknowledgement...",
-          clientID.current
-        );
-        socketClient.send(
-          JSON.stringify({
-            type: "connectionAcknowledgement",
-          })
-        );
-      }
+      console.log("WebSocketContext.js: Message received", data);
     };
 
     socketClient.onerror = (error) => {
-      console.error(
-        "WebSocketContext.js: Connection error:",
-        clientID.current,
-        error
-      );
+      console.error("WebSocketContext.js: Connection error:", clientID.current, error);
+      isConnecting.current = false;
     };
 
     socketClient.onclose = () => {
       console.log("WebSocketContext.js: Connection closed", clientID.current);
       setClient(null);
       isConnecting.current = false;
+      // Optionally reconnect
+      setTimeout(() => connectToServer(), 5000);
     };
 
     return socketClient;
   };
 
-  const handleDisconnect = (socketClient) => {
-    console.log("hitting diconnect function ♥️")
-    if (socketClient) {
-      console.log(
-        "WebSocketContext.js: Client",
-        clientID.current,
-        "has been disconnected. Goodbye!"
-      );
-      socketClient.close();
-      setClient(null);
+  const handleDisconnect = () => {
+    if (client) {
+      console.log("WebSocketContext.js: Disconnecting client", clientID.current);
+      client.close();
     }
   };
 
   useEffect(() => {
+    if (!isLoggedIn) {
+      handleDisconnect();
+      return;
+    }
+
     let socketClient = connectToServer();
 
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === "hidden") {
-        // console.log("WebSocketContext.js: Page is hidden", clientID.current);
-      } else if (document.visibilityState === "visible") {
-        // console.log("WebSocketContext.js: Page is visible", clientID.current);
-        if (!socketClient || socketClient.readyState !== W3CWebSocket.OPEN) {
-          setTimeout(() => {
-            socketClient = connectToServer();
-          }, 1000);
-        }
-      }
-    };
-
-    window.addEventListener("unload", () => handleDisconnect(socketClient));
-    document.addEventListener("visibilitychange", handleVisibilityChange);
+    window.onbeforeunload = () => handleDisconnect();
 
     return () => {
-      console.log(
-        "WebSocketContext.js: Cleaning up WebSocket connection...",
-        clientID.current
-      );
-      // handleDisconnect(socketClient);
-      window.removeEventListener("unload", () =>
-        handleDisconnect(socketClient)
-      );
-      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      console.log("WebSocketContext.js: Cleaning up WebSocket connection", clientID.current);
+      handleDisconnect();
     };
-  }, []);
+  }, [isLoggedIn]);  // Depend on isLoggedIn to reconnect when auth state changes
 
   return (
     <WebSocketContext.Provider value={{ client }}>

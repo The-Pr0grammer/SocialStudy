@@ -76,6 +76,7 @@ function setupConnectionHandlers(connection, id, rooms) {
 }
 
 function handleMessage(data, connection, rooms) {
+  console.log("server.js: Broadcasting chat message...");
   switch (data.type) {
     case "connectionAcknowledgement":
       console.log("server.js: Client acknowledgement confirmed.");
@@ -92,7 +93,23 @@ function handleMessage(data, connection, rooms) {
     case "leaveRoom":
       updatePlayerCount("leaveRoom", rooms, connection);
       break;
+    case "message":
+      broadcastChatMessage(data.message, data.user);
+      break;
     // Add more cases as needed
+  }
+}
+
+function broadcastChatMessage(message, user) {
+  console.log("server.js: Broadcasting chat message...", message, user);
+  for (let key in connections) {
+    connections[key].sendUTF(
+      JSON.stringify({
+        type: "message",
+        message: message,
+        user: user,
+      })
+    );
   }
 }
 
@@ -112,6 +129,16 @@ function updatePlayerCount(action, rooms, connection) {
       // Stop the game if all players have left
       FITBBackend.endGame(() => connections);
     }
+  }
+
+  //send the player count to all clients
+  for (let key in connections) {
+    connections[key].sendUTF(
+      JSON.stringify({
+        type: "playerCount",
+        playerCount: roomSet.size,
+      })
+    );
   }
 
   console.log(`Updated player count in ${room}: ${roomSet.size}`);

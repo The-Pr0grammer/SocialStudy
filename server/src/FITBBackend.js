@@ -1,4 +1,5 @@
 const generateRandomizedBlanks = (word, wordWithBlanks, initial) => {
+  console.log("generateRandomizedBlanks", word, wordWithBlanks, initial);
   // Split the word into characters
   const characters = initial ? word.split("") : wordWithBlanks.split("");
   let newBlankAdded = false;
@@ -38,6 +39,11 @@ let roundWinner = "";
 let gameTimer;
 
 function startGame(getConnections) {
+  if (gameTimer) {
+    console.log("An interval already exists, skipping new interval setup.");
+    return; // Skip setting a new interval if one already exists
+  }
+
   currentWord = generateRandomizedBlanks(
     WordDatabase[currentWordIndex].word,
     currentWord,
@@ -46,9 +52,8 @@ function startGame(getConnections) {
 
   broadcastCurrentWord(getConnections());
 
+  console.log("Game Timer started for:", currentWord);
   gameTimer = setInterval(() => {
-    console.log("Game Timer: ", currentWord);
-
     currentWord = generateRandomizedBlanks(
       WordDatabase[currentWordIndex].word,
       currentWord,
@@ -56,12 +61,13 @@ function startGame(getConnections) {
     );
 
     if (!currentWord.includes("_")) {
-      // Assuming this means the game is done
+      console.log("Game ended, no blanks left.");
       broadcastRoundWinner(getConnections(), "No one");
       endGame(getConnections());
+    } else {
+      console.log("Broadcasting current word status.");
+      broadcastCurrentWord(getConnections());
     }
-
-    broadcastCurrentWord(getConnections());
   }, 5000);
 }
 
@@ -124,6 +130,8 @@ function endGame(connections) {
   broadcastRoundWinner(connections, roundWinner);
   broadcastRoundStatus(connections);
   clearInterval(gameTimer);
+  gameTimer = null;  // Reset the timer to null after clearing
+
 
   setTimeout(() => {
     switchGame(connections);
